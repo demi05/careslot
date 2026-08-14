@@ -1,36 +1,89 @@
-interface GoogleButtonProps {
-  label?: string;
-  onClick?: () => void;
-  disabled?: boolean;
+"use client";
+
+import { useEffect, useRef } from "react";
+
+interface GoogleCredentialResponse {
+  credential: string;
 }
 
-export function GoogleButton({ label = "Continue with Google", onClick, disabled }: GoogleButtonProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="flex items-center justify-center gap-2.5 rounded-lg border border-gray-300 bg-white px-4 py-3 text-[15px] font-semibold text-ink transition-colors hover:bg-background disabled:cursor-not-allowed disabled:opacity-60"
-    >
-      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-        <path
-          fill="#4285F4"
-          d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.71v2.26h2.91c1.7-1.57 2.69-3.88 2.69-6.61z"
-        />
-        <path
-          fill="#34A853"
-          d="M9 18c2.43 0 4.47-.8 5.96-2.19l-2.91-2.26c-.81.54-1.84.86-3.05.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z"
-        />
-        <path
-          fill="#FBBC05"
-          d="M3.96 10.7A5.4 5.4 0 0 1 3.68 9c0-.59.1-1.17.28-1.7V4.97H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.03l3-2.33z"
-        />
-        <path
-          fill="#EA4335"
-          d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.97l3 2.33C4.67 5.16 6.66 3.58 9 3.58z"
-        />
-      </svg>
-      {label}
-    </button>
-  );
+interface GoogleIdConfiguration {
+  client_id: string;
+  callback: (response: GoogleCredentialResponse) => void;
+}
+
+interface GoogleButtonRenderOptions {
+  type?: "standard" | "icon";
+  theme?: "outline" | "filled_blue" | "filled_black";
+  size?: "large" | "medium" | "small";
+  text?: "signin_with" | "signup_with" | "continue_with" | "signin";
+  shape?: "rectangular" | "pill" | "circle" | "square";
+  logo_alignment?: "left" | "center";
+  width?: number;
+}
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: GoogleIdConfiguration) => void;
+          renderButton: (parent: HTMLElement, options: GoogleButtonRenderOptions) => void;
+        };
+      };
+    };
+  }
+}
+
+interface GoogleButtonProps {
+  onCredential: (idToken: string) => void;
+  text?: GoogleButtonRenderOptions["text"];
+}
+
+export function GoogleButton({ onCredential, text = "continue_with" }: GoogleButtonProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const onCredentialRef = useRef(onCredential);
+  onCredentialRef.current = onCredential;
+
+  useEffect(() => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+
+    let cancelled = false;
+    let interval: ReturnType<typeof setInterval> | undefined;
+
+    function render() {
+      if (cancelled || !window.google || !containerRef.current) return;
+      window.google!.accounts.id.initialize({
+        client_id: clientId!,
+        callback: (response) => onCredentialRef.current(response.credential),
+      });
+      window.google!.accounts.id.renderButton(containerRef.current, {
+        type: "standard",
+        theme: "outline",
+        size: "large",
+        text,
+        shape: "rectangular",
+        logo_alignment: "left",
+        width: containerRef.current.offsetWidth,
+      });
+    }
+
+    if (window.google?.accounts?.id) {
+      render();
+    } else {
+      interval = setInterval(() => {
+        if (window.google?.accounts?.id) {
+          clearInterval(interval);
+          render();
+        }
+      }, 100);
+    }
+
+    return () => {
+      cancelled = true;
+      if (interval) clearInterval(interval);
+    };
+  }, [text]);
+
+  return <div ref={containerRef} className="w-full [&>div]:!w-full" />;
 }
