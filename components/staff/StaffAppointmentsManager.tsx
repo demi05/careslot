@@ -4,6 +4,11 @@ import { useState, useCallback, useMemo } from "react";
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/client";
 import { useRealtimeRefresh } from "@/lib/supabase/useRealtimeRefresh";
+import {
+  staffUpdateAppointmentStatusAction,
+  staffBulkNoShowAction,
+  staffRescheduleAppointmentAction,
+} from "@/app/staff/appointments/actions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SlotPicker } from "@/components/patient/SlotPicker";
@@ -82,25 +87,19 @@ export function StaffAppointmentsManager({ initialAppointments, doctorOptions }:
 
   async function updateStatus(id: string, status: "confirmed" | "cancelled" | "no-show") {
     setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
-    const supabase = createClient();
-    await supabase.from("appointments").update({ status }).eq("id", id);
+    await staffUpdateAppointmentStatusAction(id, status);
   }
 
   async function markSelectedNoShow() {
     if (selected.size === 0) return;
     const ids = Array.from(selected);
     setAppointments((prev) => prev.map((a) => (ids.includes(a.id) ? { ...a, status: "no-show" } : a)));
-    const supabase = createClient();
-    await supabase.from("appointments").update({ status: "no-show" }).in("id", ids);
+    await staffBulkNoShowAction(ids);
     setSelected(new Set());
   }
 
   async function handleReschedule(id: string, date: string, time: string) {
-    const supabase = createClient();
-    await supabase
-      .from("appointments")
-      .update({ appointment_date: date, appointment_time: time, status: "pending" })
-      .eq("id", id);
+    await staffRescheduleAppointmentAction(id, date, time);
     setReschedulingId(null);
   }
 

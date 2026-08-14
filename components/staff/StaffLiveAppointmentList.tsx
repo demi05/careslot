@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRealtimeRefresh } from "@/lib/supabase/useRealtimeRefresh";
+import { staffUpdateAppointmentStatusAction } from "@/app/staff/appointments/actions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatTime } from "@/lib/format";
 
@@ -50,11 +51,7 @@ export function StaffLiveAppointmentList({ initialAppointments, today, canEdit }
 
   async function handleStatusChange(id: string, status: string) {
     setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status: status as StaffAppointmentRow["status"] } : a)));
-    const supabase = createClient();
-    await supabase
-      .from("appointments")
-      .update({ status: status as "confirmed" | "pending" | "no-show" })
-      .eq("id", id);
+    await staffUpdateAppointmentStatusAction(id, status as "confirmed" | "pending" | "no-show");
   }
 
   if (appointments.length === 0) {

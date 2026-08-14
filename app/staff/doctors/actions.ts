@@ -3,46 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 interface ActionResult {
   error?: string;
-}
-
-export async function createDoctorAction(
-  fullName: string,
-  email: string,
-  specialty: string
-): Promise<ActionResult> {
-  await requireStaff(["front-desk", "admin"]);
-
-  if (!fullName.trim() || !email.trim() || !specialty.trim()) {
-    return { error: "Full name, email, and specialty are all required." };
-  }
-
-  const admin = createAdminClient();
-
-  const { data: created, error: createError } = await admin.auth.admin.createUser({
-    email: email.trim(),
-    email_confirm: true,
-    user_metadata: { full_name: fullName.trim(), role: "doctor" },
-  });
-
-  if (createError || !created.user) {
-    return { error: createError?.message ?? "Could not create the doctor's account." };
-  }
-
-  const { error: doctorError } = await admin.from("doctors").insert({
-    id: created.user.id,
-    specialty: specialty.trim(),
-  });
-
-  if (doctorError) {
-    return { error: doctorError.message };
-  }
-
-  revalidatePath("/staff/doctors");
-  return {};
 }
 
 export async function addScheduleWindowAction(

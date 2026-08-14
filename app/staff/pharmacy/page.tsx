@@ -7,7 +7,7 @@ import {
 } from "@/components/staff/PharmacyDeskManager";
 
 export default async function StaffPharmacyPage() {
-  const { user } = await requireStaff(["doctor", "front-desk", "admin"]);
+  await requireStaff(["doctor", "front-desk", "admin"]);
   const supabase = createClient();
 
   const [{ data: medicationsData }, { data: patientsData }] = await Promise.all([
@@ -30,7 +30,6 @@ export default async function StaffPharmacyPage() {
       <PharmacyDeskManager
         initialMedications={(medicationsData ?? []) as unknown as PharmacyMedicationRow[]}
         patients={(patientsData ?? []) as PatientOption[]}
-        staffId={user.id}
       />
     </div>
   );
