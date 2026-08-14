@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { Suspense, useState, FormEvent } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { LogoMark } from "@/components/ui/Logo";
 import { BackButton } from "@/components/ui/BackButton";
@@ -15,13 +16,19 @@ interface FieldErrors {
   password?: string;
 }
 
+function CallbackError() {
+  const searchParams = useSearchParams();
+  if (searchParams.get("error") !== "auth-callback-failed") return null;
+  return <Alert variant="error">That sign-in link didn&apos;t work. Please try again.</Alert>;
+}
+
 export default function LoginPage() {
+  const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [loggedIn, setLoggedIn] = useState(false);
 
   function updateField(field: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,7 +61,8 @@ export default function LoginPage() {
         );
         return;
       }
-      setLoggedIn(true);
+      router.push("/dashboard");
+      router.refresh();
     } catch {
       setFormError("Something went wrong. Please check your connection and try again.");
     } finally {
@@ -77,34 +85,6 @@ export default function LoginPage() {
     } finally {
       setGoogleLoading(false);
     }
-  }
-
-  async function handleSignOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    setLoggedIn(false);
-    setForm({ email: "", password: "" });
-  }
-
-  if (loggedIn) {
-    return (
-      <div className="mx-auto max-w-[420px] animate-fade-in-up px-6 py-16 text-center">
-        <div className="mx-auto mb-4 w-fit">
-          <LogoMark size={36} />
-        </div>
-        <Alert variant="success">You&apos;re signed in.</Alert>
-        <p className="my-6 text-muted">
-          Your patient dashboard is coming in the next build. Check back soon
-          to book and manage appointments.
-        </p>
-        <button
-          onClick={handleSignOut}
-          className="font-semibold text-primary underline underline-offset-2"
-        >
-          Log out
-        </button>
-      </div>
-    );
   }
 
   return (
@@ -130,6 +110,9 @@ export default function LoginPage() {
           <div className="h-px flex-1 bg-border" />
         </div>
 
+        <Suspense fallback={null}>
+          <CallbackError />
+        </Suspense>
         {formError && <Alert variant="error">{formError}</Alert>}
 
         <TextField
