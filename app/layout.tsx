@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Work_Sans } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const workSans = Work_Sans({
@@ -24,6 +25,7 @@ export default function RootLayout({
     <html lang="en" className={workSans.variable}>
       <body className="font-sans antialiased bg-background text-ink">
         {children}
+        <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
       </body>
     </html>
   );

@@ -52,7 +52,6 @@ export default function RegisterPage() {
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -102,20 +101,22 @@ export default function RegisterPage() {
     }
   }
 
-  async function handleGoogleSignUp() {
+  async function handleGoogleCredential(idToken: string) {
     setFormError(null);
-    setGoogleLoading(true);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithIdToken({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        token: idToken,
       });
-      if (error) setFormError(error.message);
+      if (error) {
+        setFormError(error.message);
+        return;
+      }
+      router.push("/dashboard");
+      router.refresh();
     } catch {
-      setFormError("Couldn't reach Google sign-up. Please try again.");
-    } finally {
-      setGoogleLoading(false);
+      setFormError("Couldn't sign up with Google. Please try again.");
     }
   }
 
@@ -152,7 +153,7 @@ export default function RegisterPage() {
         noValidate
         className="flex flex-col gap-[18px] rounded-2xl border border-border bg-surface p-7"
       >
-        <GoogleButton label="Continue with Google" onClick={handleGoogleSignUp} disabled={googleLoading} />
+        <GoogleButton onCredential={handleGoogleCredential} text="signup_with" />
 
         <div className="flex items-center gap-3 text-[13px] text-gray-400">
           <div className="h-px flex-1 bg-border" />
