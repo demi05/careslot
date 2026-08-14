@@ -8,49 +8,43 @@ interface ActionResult {
   error?: string;
 }
 
-type RequestableStaffRole = "doctor" | "front-desk";
-
 function generateCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-function isAllowedStaffEmail(email: string): boolean {
-  const domain = process.env.NEXT_PUBLIC_STAFF_EMAIL_DOMAIN;
-  if (!domain) return false;
-  return email.trim().toLowerCase().endsWith(`@${domain.trim().toLowerCase()}`);
-}
-
 /**
- * Step 1 of self-service staff signup: validates the email is on the
- * hospital's real domain, then emails a one-time code to that address.
+ * Step 1 of self-service staff signup: checks the email against the
+ * hospital's roster of approved workers (maintained by an admin in
+ * Staff Settings) instead of an email domain — this hospital has no
+ * institutional domain, so staff sign up with personal email addresses.
  * Nothing is created in auth.users yet — that only happens once the code
- * is verified, so a patient typing in someone else's hospital email
- * address can't get an account just by guessing.
+ * is verified, so typing in a roster-listed coworker's email address
+ * can't get you an account just by guessing.
  */
-export async function requestStaffSignupAction(
-  fullName: string,
-  email: string,
-  role: RequestableStaffRole,
-  specialty: string
-): Promise<ActionResult> {
+export async function requestStaffSignupAction(email: string): Promise<ActionResult> {
   const trimmedEmail = email.trim().toLowerCase();
 
-  if (!fullName.trim() || !trimmedEmail) {
-    return { error: "Full name and email are required." };
-  }
-  if (!isAllowedStaffEmail(trimmedEmail)) {
-    const domain = process.env.NEXT_PUBLIC_STAFF_EMAIL_DOMAIN;
-    return {
-      error: domain
-        ? `Staff accounts need a @${domain} email address.`
-        : "Staff signup isn't configured for this deployment yet.",
-    };
-  }
-  if (role === "doctor" && !specialty.trim()) {
-    return { error: "Specialty is required for a doctor account." };
+  if (!trimmedEmail) {
+    return { error: "Enter your email address." };
   }
 
   const admin = createAdminClient();
+
+  const { data: rosterEntry, error: rosterError } = await admin
+    .from("staff_roster")
+    .select("email, full_name, role, specialty, claimed")
+    .eq("email", trimmedEmail)
+    .maybeSingle();
+
+  if (rosterError) return { error: rosterError.message };
+  if (!rosterEntry) {
+    return {
+      error: "This email isn't on the hospital's approved staff list. Ask an admin to add you first.",
+    };
+  }
+  if (rosterEntry.claimed) {
+    return { error: "An account already exists for this email. Try logging in instead." };
+  }
 
   // Clear out any earlier unverified attempts for this email so only the
   // latest code is valid.
@@ -61,9 +55,9 @@ export async function requestStaffSignupAction(
 
   const { error: insertError } = await admin.from("staff_signup_requests").insert({
     email: trimmedEmail,
-    full_name: fullName.trim(),
-    requested_role: role,
-    specialty: role === "doctor" ? specialty.trim() : null,
+    full_name: rosterEntry.full_name,
+    requested_role: rosterEntry.role === "admin" ? "front-desk" : rosterEntry.role,
+    specialty: rosterEntry.specialty,
     code,
     expires_at: expiresAt,
   });
@@ -80,8 +74,10 @@ export async function requestStaffSignupAction(
 }
 
 /**
- * Step 2: checks the code, then actually creates the account. This is
- * the only place a staff/doctor auth user gets created via this flow.
+ * Step 2: checks the code, then actually creates the account, always
+ * pulling the granted role/name/specialty fresh from the roster (never
+ * trusting anything the client submitted) and marking the roster entry
+ * claimed so the email can't be used to sign up again.
  */
 export async function verifyStaffSignupCodeAction(email: string, code: string): Promise<ActionResult> {
   const trimmedEmail = email.trim().toLowerCase();
@@ -93,7 +89,7 @@ export async function verifyStaffSignupCodeAction(email: string, code: string): 
 
   const { data: request, error: fetchError } = await admin
     .from("staff_signup_requests")
-    .select("id, full_name, requested_role, specialty, code, expires_at, verified")
+    .select("id, code, expires_at, verified")
     .eq("email", trimmedEmail)
     .eq("verified", false)
     .order("created_at", { ascending: false })
@@ -110,10 +106,23 @@ export async function verifyStaffSignupCodeAction(email: string, code: string): 
     return { error: "That code doesn't match. Check your email and try again." };
   }
 
+  const { data: rosterEntry, error: rosterError } = await admin
+    .from("staff_roster")
+    .select("full_name, role, specialty, claimed")
+    .eq("email", trimmedEmail)
+    .maybeSingle();
+
+  if (rosterError || !rosterEntry) {
+    return { error: "This email is no longer on the approved staff list. Contact an admin." };
+  }
+  if (rosterEntry.claimed) {
+    return { error: "An account already exists for this email. Try logging in instead." };
+  }
+
   const { data: created, error: createError } = await admin.auth.admin.createUser({
     email: trimmedEmail,
     email_confirm: true,
-    user_metadata: { full_name: request.full_name, role: request.requested_role },
+    user_metadata: { full_name: rosterEntry.full_name, role: rosterEntry.role },
   });
 
   if (createError || !created.user) {
@@ -125,15 +134,19 @@ export async function verifyStaffSignupCodeAction(email: string, code: string): 
     };
   }
 
-  if (request.requested_role === "doctor") {
+  if (rosterEntry.role === "doctor") {
     const { error: doctorError } = await admin.from("doctors").insert({
       id: created.user.id,
-      specialty: request.specialty ?? "General Practice",
+      specialty: rosterEntry.specialty ?? "General Practice",
     });
     if (doctorError) return { error: doctorError.message };
   }
 
   await admin.from("staff_signup_requests").update({ verified: true }).eq("id", request.id);
+  await admin
+    .from("staff_roster")
+    .update({ claimed: true, claimed_at: new Date().toISOString() })
+    .eq("email", trimmedEmail);
 
   return {};
 }

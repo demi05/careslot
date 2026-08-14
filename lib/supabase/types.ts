@@ -189,6 +189,31 @@ export type Database = {
         };
         Relationships: [];
       };
+      staff_roster: {
+        Row: {
+          id: string;
+          email: string;
+          full_name: string;
+          role: "doctor" | "front-desk" | "admin";
+          specialty: string | null;
+          claimed: boolean;
+          claimed_at: string | null;
+          added_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          email: string;
+          full_name: string;
+          role: "doctor" | "front-desk" | "admin";
+          specialty?: string | null;
+          added_by?: string | null;
+        };
+        Update: {
+          claimed?: boolean;
+          claimed_at?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
