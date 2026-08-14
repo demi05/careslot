@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { LogoMark } from "@/components/ui/Logo";
 import { BackButton } from "@/components/ui/BackButton";
@@ -41,6 +42,7 @@ function validate(form: Record<string, string>): FieldErrors {
 }
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -70,7 +72,7 @@ export default function RegisterPage() {
     setSubmitting(true);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
         options: {
@@ -83,6 +85,13 @@ export default function RegisterPage() {
       });
       if (error) {
         setFormError(error.message);
+        return;
+      }
+      if (data.session) {
+        // Email confirmation is disabled on this project, so signUp already
+        // returned an active session.
+        router.push("/dashboard");
+        router.refresh();
         return;
       }
       setSuccess(true);
