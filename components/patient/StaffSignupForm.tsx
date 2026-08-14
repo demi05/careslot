@@ -8,15 +8,11 @@ import { TextField } from "@/components/ui/TextField";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 
-type StaffRole = "doctor" | "front-desk";
 type Step = "request" | "verify" | "done";
 
 export function StaffSignupForm() {
   const [step, setStep] = useState<Step>("request");
-  const [role, setRole] = useState<StaffRole>("front-desk");
-  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [specialty, setSpecialty] = useState("");
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,16 +20,12 @@ export function StaffSignupForm() {
   async function handleRequest(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!fullName.trim() || !email.trim()) {
-      setError("Full name and email are required.");
-      return;
-    }
-    if (role === "doctor" && !specialty.trim()) {
-      setError("Specialty is required for a doctor account.");
+    if (!email.trim()) {
+      setError("Enter your email address.");
       return;
     }
     setSubmitting(true);
-    const result = await requestStaffSignupAction(fullName, email, role, specialty);
+    const result = await requestStaffSignupAction(email);
     setSubmitting(false);
     if (result.error) {
       setError(result.error);
@@ -126,58 +118,23 @@ export function StaffSignupForm() {
       <div>
         <h2 className="mb-1.5 text-lg font-bold text-ink">Create a staff account</h2>
         <p className="text-sm text-muted">
-          You&apos;ll need your hospital email address. We&apos;ll send a verification code to confirm it&apos;s
-          really you.
+          Enter the email address the hospital has on file for you. We&apos;ll check it against the approved staff
+          list, then send a verification code to confirm it&apos;s really you.
         </p>
       </div>
 
       {error && <Alert variant="error">{error}</Alert>}
 
-      <div>
-        <label className="mb-1.5 block text-sm font-semibold text-ink">Role</label>
-        <div className="flex gap-2">
-          {(["front-desk", "doctor"] as StaffRole[]).map((r) => (
-            <button
-              key={r}
-              type="button"
-              onClick={() => setRole(r)}
-              className={`rounded-lg border px-3.5 py-2 text-sm font-semibold transition-colors ${
-                role === r ? "border-primary bg-primary text-white" : "border-gray-300 bg-white text-ink"
-              }`}
-            >
-              {r === "doctor" ? "Doctor" : "Front desk"}
-            </button>
-          ))}
-        </div>
-      </div>
-
       <TextField
-        label="Full name"
-        name="fullName"
-        value={fullName}
-        onChange={(e) => setFullName(e.target.value)}
-        placeholder="Nkechi Obi"
-        autoComplete="name"
-      />
-      <TextField
-        label="Hospital email address"
+        label="Email address"
         type="email"
         name="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="you@hospital.org"
+        placeholder="you@gmail.com"
         autoComplete="email"
-        hint="Must be your official hospital email address."
+        hint="Your role and details are pulled from the hospital's staff records — no need to enter them here."
       />
-      {role === "doctor" && (
-        <TextField
-          label="Specialty"
-          name="specialty"
-          value={specialty}
-          onChange={(e) => setSpecialty(e.target.value)}
-          placeholder="General Practice"
-        />
-      )}
 
       <Button type="submit" loading={submitting}>
         Send verification code

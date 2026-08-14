@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useTransition, type FormEvent } from "react";
-import { createStaffMemberAction, updateStaffRoleAction, toggleDoctorActiveAction } from "@/app/staff/settings/actions";
+import {
+  createStaffMemberAction,
+  updateStaffRoleAction,
+  toggleDoctorActiveAction,
+  addRosterEntryAction,
+  removeRosterEntryAction,
+} from "@/app/staff/settings/actions";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Alert } from "@/components/ui/Alert";
@@ -20,6 +26,15 @@ export interface DoctorSettingsItem {
   is_active: boolean;
 }
 
+export interface RosterEntryItem {
+  id: string;
+  email: string;
+  full_name: string;
+  role: StaffRole;
+  specialty: string | null;
+  claimed: boolean;
+}
+
 const roleLabels: Record<StaffRole, string> = {
   doctor: "Doctor",
   "front-desk": "Front desk",
@@ -29,12 +44,15 @@ const roleLabels: Record<StaffRole, string> = {
 interface StaffSettingsManagerProps {
   staffMembers: StaffMemberItem[];
   doctors: DoctorSettingsItem[];
+  roster: RosterEntryItem[];
 }
 
-export function StaffSettingsManager({ staffMembers, doctors }: StaffSettingsManagerProps) {
+export function StaffSettingsManager({ staffMembers, doctors, roster }: StaffSettingsManagerProps) {
   return (
     <div className="flex flex-col gap-8">
       <AddStaffForm />
+
+      <RosterSection roster={roster} />
 
       <section>
         <h2 className="mb-3.5 text-[17px] font-bold text-ink">Front desk &amp; admin staff</h2>
@@ -66,6 +84,145 @@ export function StaffSettingsManager({ staffMembers, doctors }: StaffSettingsMan
         )}
       </section>
     </div>
+  );
+}
+
+function RosterSection({ roster }: { roster: RosterEntryItem[] }) {
+  const [role, setRole] = useState<StaffRole>("doctor");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [specialty, setSpecialty] = useState("");
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  function handleAdd(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    startTransition(async () => {
+      const result = await addRosterEntryAction(fullName, email, role, role === "doctor" ? specialty : undefined);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setSuccess(`${fullName} can now sign up at /register using ${email}.`);
+      setFullName("");
+      setEmail("");
+      setSpecialty("");
+    });
+  }
+
+  function handleRemove(id: string) {
+    startTransition(async () => {
+      await removeRosterEntryAction(id);
+    });
+  }
+
+  return (
+    <section className="rounded-2xl border border-border bg-surface p-6">
+      <h2 className="mb-1 text-[17px] font-bold text-ink">Approved staff roster</h2>
+      <p className="mb-4 text-sm text-muted">
+        This hospital has no email domain to gate signups on, so self-service staff signup checks this list
+        instead. Add a worker here with the email they&apos;ll actually use — they can then sign up at{" "}
+        <span className="font-semibold text-ink">/register</span> and verify it with a one-time code.
+      </p>
+
+      <form onSubmit={handleAdd} className="mb-5 flex flex-col gap-4">
+        {error && <Alert variant="error">{error}</Alert>}
+        {success && <Alert variant="success">{success}</Alert>}
+
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold text-ink">Role</label>
+          <div className="flex flex-wrap gap-2">
+            {(["doctor", "front-desk", "admin"] as StaffRole[]).map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRole(r)}
+                className={`rounded-lg border px-3.5 py-2 text-sm font-semibold transition-colors ${
+                  role === r ? "border-primary bg-primary text-white" : "border-gray-300 bg-white text-ink"
+                }`}
+              >
+                {roleLabels[r]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <TextField
+            label="Full name"
+            name="rosterFullName"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder="Nkechi Obi"
+          />
+          <TextField
+            label="Email address"
+            type="email"
+            name="rosterEmail"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="nkechi@gmail.com"
+          />
+        </div>
+
+        {role === "doctor" && (
+          <TextField
+            label="Specialty"
+            name="rosterSpecialty"
+            value={specialty}
+            onChange={(e) => setSpecialty(e.target.value)}
+            placeholder="General Practice"
+          />
+        )}
+
+        <Button type="submit" loading={pending} className="!w-fit">
+          Add to roster
+        </Button>
+      </form>
+
+      {roster.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-border bg-background p-5 text-sm text-muted">
+          No one is on the roster yet — self-service staff signup will reject everyone until you add entries here.
+        </p>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-border">
+          {roster.map((entry) => (
+            <div
+              key={entry.id}
+              className="flex flex-wrap items-center justify-between gap-3 border-b border-[#F1F2F3] px-5 py-3.5 last:border-b-0"
+            >
+              <div>
+                <div className="text-sm font-semibold text-ink">{entry.full_name}</div>
+                <div className="text-[13px] text-muted">
+                  {entry.email} · {roleLabels[entry.role]}
+                  {entry.specialty ? ` · ${entry.specialty}` : ""}
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                    entry.claimed ? "bg-success-tint text-success" : "bg-background text-muted"
+                  }`}
+                >
+                  {entry.claimed ? "Account claimed" : "Not signed up yet"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleRemove(entry.id)}
+                  disabled={pending}
+                  className="text-[13px] font-semibold text-danger hover:underline disabled:opacity-60"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

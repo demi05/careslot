@@ -79,3 +79,55 @@ export async function toggleDoctorActiveAction(doctorId: string, isActive: boole
   revalidatePath("/staff/doctors");
   return {};
 }
+
+/**
+ * Adds a worker to the approved staff roster so they can self-sign-up on
+ * /register (the hospital has no email domain to gate on, so this
+ * admin-maintained list is the source of truth instead).
+ */
+export async function addRosterEntryAction(
+  fullName: string,
+  email: string,
+  role: StaffRole,
+  specialty?: string
+): Promise<ActionResult> {
+  const { user } = await requireStaff(["admin"]);
+
+  const trimmedEmail = email.trim().toLowerCase();
+  if (!fullName.trim() || !trimmedEmail) {
+    return { error: "Full name and email are required." };
+  }
+  if (role === "doctor" && !specialty?.trim()) {
+    return { error: "Specialty is required for a doctor." };
+  }
+
+  const supabase = createClient();
+  const { error } = await supabase.from("staff_roster").insert({
+    email: trimmedEmail,
+    full_name: fullName.trim(),
+    role,
+    specialty: role === "doctor" ? specialty!.trim() : null,
+    added_by: user.id,
+  });
+
+  if (error) {
+    return {
+      error: error.message.includes("duplicate") ? "This email is already on the roster." : error.message,
+    };
+  }
+
+  revalidatePath("/staff/settings");
+  return {};
+}
+
+/** Removes a roster entry — e.g. someone added by mistake, or who has left. */
+export async function removeRosterEntryAction(rosterId: string): Promise<ActionResult> {
+  await requireStaff(["admin"]);
+
+  const supabase = createClient();
+  const { error } = await supabase.from("staff_roster").delete().eq("id", rosterId);
+  if (error) return { error: error.message };
+
+  revalidatePath("/staff/settings");
+  return {};
+}
