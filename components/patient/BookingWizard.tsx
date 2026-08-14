@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle, Stethoscope } from "@phosphor-icons/react/dist/ssr";
-import { createClient } from "@/lib/supabase/client";
+import { bookAppointmentAction } from "@/app/(patient)/book/actions";
 import { SlotPicker } from "@/components/patient/SlotPicker";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
@@ -24,10 +24,9 @@ const steps = [
 
 interface BookingWizardProps {
   doctors: DoctorOption[];
-  patientId: string;
 }
 
-export function BookingWizard({ doctors, patientId }: BookingWizardProps) {
+export function BookingWizard({ doctors }: BookingWizardProps) {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [selectedDoctor, setSelectedDoctor] = useState<DoctorOption | null>(null);
@@ -51,21 +50,15 @@ export function BookingWizard({ doctors, patientId }: BookingWizardProps) {
     if (!selectedDoctor || !selectedSlot) return;
     setSubmitting(true);
     setError(null);
-    const supabase = createClient();
-    const { error } = await supabase.from("appointments").insert({
-      patient_id: patientId,
-      doctor_id: selectedDoctor.id,
-      appointment_date: selectedSlot.date,
-      appointment_time: selectedSlot.time,
-      reason: reason.trim() || null,
-    });
+    const result = await bookAppointmentAction(
+      selectedDoctor.id,
+      selectedSlot.date,
+      selectedSlot.time,
+      reason.trim()
+    );
     setSubmitting(false);
-    if (error) {
-      setError(
-        error.code === "23505"
-          ? "That slot was just booked by someone else. Please pick another time."
-          : error.message
-      );
+    if (result.error) {
+      setError(result.error);
       return;
     }
     setStep(4);

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Calendar } from "@phosphor-icons/react/dist/ssr";
 import { StatusBadge, type Status } from "@/components/ui/StatusBadge";
-import { createClient } from "@/lib/supabase/client";
+import { cancelAppointmentAction } from "@/app/(patient)/appointments/actions";
 import { formatDate, formatTime } from "@/lib/format";
 
 export interface AppointmentRowData {
@@ -22,8 +22,7 @@ export function AppointmentRow({ id, doctorName, date, time, status }: Appointme
 
   async function handleCancel() {
     setCancelling(true);
-    const supabase = createClient();
-    await supabase.from("appointments").update({ status: "cancelled" }).eq("id", id);
+    await cancelAppointmentAction(id);
     setCancelling(false);
     setConfirming(false);
   }

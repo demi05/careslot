@@ -31,7 +31,7 @@ export default async function BookPage() {
       <PatientTopNav userName={fullName || user.email || "there"} />
 
       <div className="mx-auto w-full max-w-3xl flex-1 px-5 py-7 sm:px-8">
-        <BookingWizard doctors={doctors} patientId={user.id} />
+        <BookingWizard doctors={doctors} />
       </div>
 
       <PatientBottomTabs />
