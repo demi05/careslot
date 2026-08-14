@@ -14,7 +14,7 @@ interface UpcomingAppointment {
   appointment_date: string;
   appointment_time: string;
   status: Status;
-  doctors: { full_name: string; specialty: string } | null;
+  doctors: { specialty: string; profiles: { full_name: string | null } | null } | null;
 }
 
 export default async function DashboardPage() {
@@ -27,13 +27,16 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const fullName = (user.user_metadata?.full_name as string | undefined)?.trim();
+  const fullName = (
+    (user.user_metadata?.full_name as string | undefined) ??
+    (user.user_metadata?.name as string | undefined)
+  )?.trim();
   const firstName = fullName?.split(" ")[0] || "there";
 
   const today = new Date().toISOString().slice(0, 10);
   const { data, error } = await supabase
     .from("appointments")
-    .select("id, appointment_date, appointment_time, status, doctors(full_name, specialty)")
+    .select("id, appointment_date, appointment_time, status, doctors(specialty, profiles(full_name))")
     .eq("patient_id", user.id)
     .neq("status", "cancelled")
     .gte("appointment_date", today)
@@ -72,7 +75,7 @@ export default async function DashboardPage() {
               <AppointmentCard
                 key={a.id}
                 id={a.id}
-                doctorName={a.doctors?.full_name ?? null}
+                doctorName={a.doctors?.profiles?.full_name ?? null}
                 specialty={a.doctors?.specialty ?? null}
                 date={a.appointment_date}
                 time={a.appointment_time}
