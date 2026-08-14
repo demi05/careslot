@@ -1,8 +1,9 @@
-export type Status = "confirmed" | "pending" | "cancelled" | "no-show" | "past" | "collected" | "failed";
+export type Status = "confirmed" | "pending" | "cancelled" | "no-show" | "past" | "collected" | "failed" | "sent";
 
 const statusStyles: Record<Status, string> = {
   confirmed: "bg-success-tint text-success",
   collected: "bg-success-tint text-success",
+  sent: "bg-success-tint text-success",
   pending: "bg-warning-tint text-warning",
   cancelled: "bg-danger-tint text-danger",
   "no-show": "bg-danger-tint text-danger",
@@ -13,6 +14,7 @@ const statusStyles: Record<Status, string> = {
 const statusLabels: Record<Status, string> = {
   confirmed: "Confirmed",
   collected: "Collected",
+  sent: "Sent",
   pending: "Pending",
   cancelled: "Cancelled",
   "no-show": "No-show",
