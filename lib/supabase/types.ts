@@ -164,6 +164,31 @@ export type Database = {
         };
         Relationships: [];
       };
+      staff_signup_requests: {
+        Row: {
+          id: string;
+          email: string;
+          full_name: string;
+          requested_role: "doctor" | "front-desk";
+          specialty: string | null;
+          code: string;
+          expires_at: string;
+          verified: boolean;
+          created_at: string;
+        };
+        Insert: {
+          email: string;
+          full_name: string;
+          requested_role: "doctor" | "front-desk";
+          specialty?: string | null;
+          code: string;
+          expires_at: string;
+        };
+        Update: {
+          verified?: boolean;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
