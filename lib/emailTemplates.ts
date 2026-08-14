@@ -88,3 +88,21 @@ export function medicationReadyEmail({ medicationName }: { medicationName: strin
     `),
   };
 }
+
+export function staffVerificationCodeEmail({ code }: { code: string }) {
+  return {
+    subject: `${code} is your CareSlot staff verification code`,
+    html: wrapper(`
+      <h1 style="font-size: 18px; margin: 0 0 12px;">Verify your staff account</h1>
+      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 18px;">
+        Enter this code to finish creating your CareSlot staff account. It expires in 10 minutes.
+      </p>
+      <div style="font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #1A5C52; text-align: center; padding: 16px; background: #F8F9FA; border-radius: 10px;">
+        ${code}
+      </div>
+      <p style="font-size: 13px; color: #6B7280; margin: 18px 0 0;">
+        If you didn't request this, you can ignore this email.
+      </p>
+    `),
+  };
+}
