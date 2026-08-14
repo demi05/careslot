@@ -1,5 +1,6 @@
 import { Clock } from "@phosphor-icons/react/dist/ssr";
 import { StatusBadge, type Status } from "@/components/ui/StatusBadge";
+import { formatDate, formatTime } from "@/lib/format";
 
 export interface AppointmentCardData {
   id: string;
@@ -27,7 +28,7 @@ export function AppointmentCard({ doctorName, specialty, date, time, status }: A
       </div>
       <div className="flex items-center gap-1.5 text-sm text-muted">
         <Clock size={16} />
-        {date} at {time}
+        {formatDate(date)} at {formatTime(time)}
       </div>
     </div>
   );
