@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { CalendarCheck } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/client";
 import { useRealtimeRefresh } from "@/lib/supabase/useRealtimeRefresh";
+import { cancelAppointmentAction, rescheduleAppointmentAction } from "@/app/(patient)/appointments/actions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Alert } from "@/components/ui/Alert";
 import { SlotPicker } from "@/components/patient/SlotPicker";
@@ -39,18 +40,10 @@ export function AppointmentDetailCard({ appointment: initial, doctorId }: Appoin
     setSaving(true);
     setError(null);
     setSuccess(null);
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("appointments")
-      .update({ appointment_date: date, appointment_time: time, status: "pending" })
-      .eq("id", appointment.id);
+    const result = await rescheduleAppointmentAction(appointment.id, date, time);
     setSaving(false);
-    if (error) {
-      setError(
-        error.code === "23505"
-          ? "That slot was just booked by someone else. Pick another time."
-          : error.message
-      );
+    if (result.error) {
+      setError(result.error);
       return;
     }
     setAppointment((prev) => ({ ...prev, appointment_date: date, appointment_time: time, status: "pending" }));
@@ -60,14 +53,10 @@ export function AppointmentDetailCard({ appointment: initial, doctorId }: Appoin
 
   async function handleCancel() {
     setSaving(true);
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("appointments")
-      .update({ status: "cancelled" })
-      .eq("id", appointment.id);
+    const result = await cancelAppointmentAction(appointment.id);
     setSaving(false);
     setConfirmingCancel(false);
-    if (!error) {
+    if (!result.error) {
       setAppointment((prev) => ({ ...prev, status: "cancelled" }));
     }
   }

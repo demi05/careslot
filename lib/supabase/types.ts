@@ -33,6 +33,7 @@ export type Database = {
         Update: {
           full_name?: string | null;
           phone?: string | null;
+          role?: "patient" | "doctor" | "front-desk" | "admin";
           sms_reminders?: boolean;
           email_reminders?: boolean;
         };
@@ -160,6 +161,56 @@ export type Database = {
         Update: {
           status?: "pending" | "collected";
           collected_at?: string | null;
+        };
+        Relationships: [];
+      };
+      staff_signup_requests: {
+        Row: {
+          id: string;
+          email: string;
+          full_name: string;
+          requested_role: "doctor" | "front-desk";
+          specialty: string | null;
+          code: string;
+          expires_at: string;
+          verified: boolean;
+          created_at: string;
+        };
+        Insert: {
+          email: string;
+          full_name: string;
+          requested_role: "doctor" | "front-desk";
+          specialty?: string | null;
+          code: string;
+          expires_at: string;
+        };
+        Update: {
+          verified?: boolean;
+        };
+        Relationships: [];
+      };
+      staff_roster: {
+        Row: {
+          id: string;
+          email: string;
+          full_name: string;
+          role: "doctor" | "front-desk" | "admin";
+          specialty: string | null;
+          claimed: boolean;
+          claimed_at: string | null;
+          added_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          email: string;
+          full_name: string;
+          role: "doctor" | "front-desk" | "admin";
+          specialty?: string | null;
+          added_by?: string | null;
+        };
+        Update: {
+          claimed?: boolean;
+          claimed_at?: string | null;
         };
         Relationships: [];
       };

@@ -4,6 +4,7 @@ import { Suspense, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getPostLoginRedirect } from "@/lib/getPostLoginRedirect";
 import { LogoMark } from "@/components/ui/Logo";
 import { BackButton } from "@/components/ui/BackButton";
 import { GoogleButton } from "@/components/ui/GoogleButton";
@@ -48,7 +49,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: form.email,
         password: form.password,
       });
@@ -60,7 +61,7 @@ export default function LoginPage() {
         );
         return;
       }
-      router.push("/dashboard");
+      router.push(await getPostLoginRedirect(supabase, data.user.id));
       router.refresh();
     } catch {
       setFormError("Something went wrong. Please check your connection and try again.");
@@ -73,7 +74,7 @@ export default function LoginPage() {
     setFormError(null);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithIdToken({
+      const { data, error } = await supabase.auth.signInWithIdToken({
         provider: "google",
         token: idToken,
       });
@@ -81,7 +82,7 @@ export default function LoginPage() {
         setFormError(error.message);
         return;
       }
-      router.push("/dashboard");
+      router.push(await getPostLoginRedirect(supabase, data.user.id));
       router.refresh();
     } catch {
       setFormError("Couldn't sign in with Google. Please try again.");

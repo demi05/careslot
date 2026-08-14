@@ -10,6 +10,7 @@ import { GoogleButton } from "@/components/ui/GoogleButton";
 import { TextField } from "@/components/ui/TextField";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
+import { StaffSignupForm } from "@/components/patient/StaffSignupForm";
 
 interface FieldErrors {
   fullName?: string;
@@ -41,8 +42,11 @@ function validate(form: Record<string, string>): FieldErrors {
   return errors;
 }
 
+type AccountType = "patient" | "staff";
+
 export default function RegisterPage() {
   const router = useRouter();
+  const [accountType, setAccountType] = useState<AccountType>("patient");
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -148,84 +152,111 @@ export default function RegisterPage() {
         <h1 className="text-2xl font-bold text-primary">Create your account</h1>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        noValidate
-        className="flex flex-col gap-[18px] rounded-2xl border border-border bg-surface p-7"
-      >
-        <GoogleButton onCredential={handleGoogleCredential} text="signup_with" />
+      <div className="mb-5 flex justify-center gap-2">
+        <button
+          type="button"
+          onClick={() => setAccountType("patient")}
+          className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
+            accountType === "patient"
+              ? "border-primary bg-primary text-white"
+              : "border-gray-300 bg-white text-ink"
+          }`}
+        >
+          I&apos;m a patient
+        </button>
+        <button
+          type="button"
+          onClick={() => setAccountType("staff")}
+          className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
+            accountType === "staff" ? "border-primary bg-primary text-white" : "border-gray-300 bg-white text-ink"
+          }`}
+        >
+          I&apos;m hospital staff
+        </button>
+      </div>
 
-        <div className="flex items-center gap-3 text-[13px] text-gray-400">
-          <div className="h-px flex-1 bg-border" />
-          or continue with email
-          <div className="h-px flex-1 bg-border" />
-        </div>
+      {accountType === "staff" ? (
+        <StaffSignupForm />
+      ) : (
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+          className="flex flex-col gap-[18px] rounded-2xl border border-border bg-surface p-7"
+        >
+          <GoogleButton onCredential={handleGoogleCredential} text="signup_with" />
 
-        {formError && <Alert variant="error">{formError}</Alert>}
+          <div className="flex items-center gap-3 text-[13px] text-gray-400">
+            <div className="h-px flex-1 bg-border" />
+            or continue with email
+            <div className="h-px flex-1 bg-border" />
+          </div>
 
-        <TextField
-          label="Full name"
-          name="fullName"
-          placeholder="Adaeze Nwosu"
-          value={form.fullName}
-          onChange={updateField("fullName")}
-          error={errors.fullName}
-          autoComplete="name"
-        />
-        <TextField
-          label="Email address"
-          type="email"
-          name="email"
-          placeholder="you@example.com"
-          value={form.email}
-          onChange={updateField("email")}
-          error={errors.email}
-          autoComplete="email"
-        />
-        <TextField
-          label="Phone number"
-          type="tel"
-          name="phone"
-          placeholder="+234 803 000 0000"
-          requiredBadge
-          value={form.phone}
-          onChange={updateField("phone")}
-          error={errors.phone}
-          hint={errors.phone ? undefined : "We use this to send your appointment reminders by SMS."}
-          autoComplete="tel"
-        />
-        <TextField
-          label="Password"
-          type="password"
-          name="password"
-          placeholder="At least 8 characters"
-          value={form.password}
-          onChange={updateField("password")}
-          error={errors.password}
-          autoComplete="new-password"
-        />
-        <TextField
-          label="Confirm password"
-          type="password"
-          name="confirmPassword"
-          placeholder="Re-enter password"
-          value={form.confirmPassword}
-          onChange={updateField("confirmPassword")}
-          error={errors.confirmPassword}
-          autoComplete="new-password"
-        />
+          {formError && <Alert variant="error">{formError}</Alert>}
 
-        <Button type="submit" loading={submitting} className="mt-2">
-          Create account
-        </Button>
+          <TextField
+            label="Full name"
+            name="fullName"
+            placeholder="Adaeze Nwosu"
+            value={form.fullName}
+            onChange={updateField("fullName")}
+            error={errors.fullName}
+            autoComplete="name"
+          />
+          <TextField
+            label="Email address"
+            type="email"
+            name="email"
+            placeholder="you@example.com"
+            value={form.email}
+            onChange={updateField("email")}
+            error={errors.email}
+            autoComplete="email"
+          />
+          <TextField
+            label="Phone number"
+            type="tel"
+            name="phone"
+            placeholder="+234 803 000 0000"
+            requiredBadge
+            value={form.phone}
+            onChange={updateField("phone")}
+            error={errors.phone}
+            hint={errors.phone ? undefined : "We use this to send your appointment reminders by SMS."}
+            autoComplete="tel"
+          />
+          <TextField
+            label="Password"
+            type="password"
+            name="password"
+            placeholder="At least 8 characters"
+            value={form.password}
+            onChange={updateField("password")}
+            error={errors.password}
+            autoComplete="new-password"
+          />
+          <TextField
+            label="Confirm password"
+            type="password"
+            name="confirmPassword"
+            placeholder="Re-enter password"
+            value={form.confirmPassword}
+            onChange={updateField("confirmPassword")}
+            error={errors.confirmPassword}
+            autoComplete="new-password"
+          />
 
-        <p className="text-center text-sm text-muted">
-          Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-primary underline underline-offset-2">
-            Log in
-          </Link>
-        </p>
-      </form>
+          <Button type="submit" loading={submitting} className="mt-2">
+            Create account
+          </Button>
+
+          <p className="text-center text-sm text-muted">
+            Already have an account?{" "}
+            <Link href="/login" className="font-semibold text-primary underline underline-offset-2">
+              Log in
+            </Link>
+          </p>
+        </form>
+      )}
     </div>
   );
 }
