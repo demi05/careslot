@@ -3,7 +3,8 @@
 import { useState, useEffect, useTransition, type FormEvent } from "react";
 import { Plus, Trash, X } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/client";
-import { createDoctorAction, addScheduleWindowAction, removeScheduleWindowAction } from "@/app/staff/doctors/actions";
+import { addScheduleWindowAction, removeScheduleWindowAction } from "@/app/staff/doctors/actions";
+import { createStaffMemberAction } from "@/app/staff/settings/actions";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Alert } from "@/components/ui/Alert";
@@ -124,7 +125,7 @@ function AddDoctorForm({ onClose }: { onClose: () => void }) {
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      const result = await createDoctorAction(fullName, email, specialty);
+      const result = await createStaffMemberAction(fullName, email, "doctor", specialty);
       if (result.error) {
         setError(result.error);
         return;

@@ -4,6 +4,7 @@ import { useState, useCallback, useTransition, type FormEvent } from "react";
 import { Pill, Plus, X } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/client";
 import { useRealtimeRefresh } from "@/lib/supabase/useRealtimeRefresh";
+import { logMedicationAction, markMedicationCollectedAction } from "@/app/staff/pharmacy/actions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
@@ -41,10 +42,9 @@ async function fetchQueue(): Promise<PharmacyMedicationRow[]> {
 interface PharmacyDeskManagerProps {
   initialMedications: PharmacyMedicationRow[];
   patients: PatientOption[];
-  staffId: string;
 }
 
-export function PharmacyDeskManager({ initialMedications, patients, staffId }: PharmacyDeskManagerProps) {
+export function PharmacyDeskManager({ initialMedications, patients }: PharmacyDeskManagerProps) {
   const [medications, setMedications] = useState(initialMedications);
   const [showLogForm, setShowLogForm] = useState(false);
 
@@ -58,11 +58,7 @@ export function PharmacyDeskManager({ initialMedications, patients, staffId }: P
 
   async function markCollected(id: string) {
     setMedications((prev) => prev.map((m) => (m.id === id ? { ...m, status: "collected" } : m)));
-    const supabase = createClient();
-    await supabase
-      .from("medications")
-      .update({ status: "collected", collected_at: new Date().toISOString() })
-      .eq("id", id);
+    await markMedicationCollectedAction(id);
   }
 
   return (
@@ -94,7 +90,6 @@ export function PharmacyDeskManager({ initialMedications, patients, staffId }: P
         <div className="mb-5">
           <LogMedicationForm
             patients={patients}
-            staffId={staffId}
             onLogged={() => {
               refetch();
               setShowLogForm(false);
@@ -147,11 +142,10 @@ export function PharmacyDeskManager({ initialMedications, patients, staffId }: P
 
 interface LogMedicationFormProps {
   patients: PatientOption[];
-  staffId: string;
   onLogged: () => void;
 }
 
-function LogMedicationForm({ patients, staffId, onLogged }: LogMedicationFormProps) {
+function LogMedicationForm({ patients, onLogged }: LogMedicationFormProps) {
   const [patientId, setPatientId] = useState(patients[0]?.id ?? "");
   const [medicationName, setMedicationName] = useState("");
   const [dosage, setDosage] = useState("");
@@ -166,15 +160,9 @@ function LogMedicationForm({ patients, staffId, onLogged }: LogMedicationFormPro
       return;
     }
     startTransition(async () => {
-      const supabase = createClient();
-      const { error } = await supabase.from("medications").insert({
-        patient_id: patientId,
-        medication_name: medicationName.trim(),
-        dosage: dosage.trim() || null,
-        logged_by: staffId,
-      });
-      if (error) {
-        setError(error.message);
+      const result = await logMedicationAction(patientId, medicationName.trim(), dosage.trim());
+      if (result.error) {
+        setError(result.error);
         return;
       }
       setMedicationName("");

@@ -33,6 +33,7 @@ export type Database = {
         Update: {
           full_name?: string | null;
           phone?: string | null;
+          role?: "patient" | "doctor" | "front-desk" | "admin";
           sms_reminders?: boolean;
           email_reminders?: boolean;
         };

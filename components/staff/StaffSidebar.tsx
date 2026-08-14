@@ -10,6 +10,7 @@ import {
   ChartBar,
   Bell,
   UserCircle,
+  GearSix,
 } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/client";
 import { LogoMark } from "@/components/ui/Logo";
@@ -29,6 +30,7 @@ const navItems: NavItem[] = [
   { href: "/staff/pharmacy", label: "Pharmacy", icon: Pill, roles: ["doctor", "front-desk", "admin"] },
   { href: "/staff/analytics", label: "Analytics", icon: ChartBar, roles: ["admin"] },
   { href: "/staff/notifications", label: "Notifications", icon: Bell, roles: ["front-desk", "admin"] },
+  { href: "/staff/settings", label: "Settings", icon: GearSix, roles: ["admin"] },
 ];
 
 const roleLabels: Record<StaffRole, string> = {
