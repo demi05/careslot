@@ -9,7 +9,7 @@ export type StaffRole = "doctor" | "front-desk" | "admin";
  * this across the staff layout and any page that also needs it).
  */
 export const getCurrentProfile = cache(async () => {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
