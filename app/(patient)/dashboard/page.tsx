@@ -18,7 +18,7 @@ interface UpcomingAppointment {
 }
 
 export default async function DashboardPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -34,7 +34,7 @@ export default async function DashboardPage() {
   const firstName = fullName?.split(" ")[0] || "there";
 
   const today = new Date().toISOString().slice(0, 10);
-  const { data, error } = await supabase
+  const { data, error } = await (await supabase)
     .from("appointments")
     .select("id, appointment_date, appointment_time, status, doctors(specialty, profiles(full_name))")
     .eq("patient_id", user.id)

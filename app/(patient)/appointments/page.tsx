@@ -6,7 +6,7 @@ import { PatientBottomTabs } from "@/components/patient/PatientBottomTabs";
 import { AppointmentsList } from "@/components/patient/AppointmentsList";
 
 export default async function AppointmentsPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
