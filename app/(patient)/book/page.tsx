@@ -5,7 +5,7 @@ import { PatientBottomTabs } from "@/components/patient/PatientBottomTabs";
 import { BookingWizard, type DoctorOption } from "@/components/patient/BookingWizard";
 
 export default async function BookPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

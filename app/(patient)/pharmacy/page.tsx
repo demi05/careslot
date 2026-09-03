@@ -5,7 +5,7 @@ import { PatientBottomTabs } from "@/components/patient/PatientBottomTabs";
 import { MedicationsList, type MedicationRow } from "@/components/patient/MedicationsList";
 
 export default async function PharmacyPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
