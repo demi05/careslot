@@ -34,7 +34,7 @@ export default async function DashboardPage() {
   const firstName = fullName?.split(" ")[0] || "there";
 
   const today = new Date().toISOString().slice(0, 10);
-  const { data, error } = await (await supabase)
+  const { data, error } = await supabase
     .from("appointments")
     .select("id, appointment_date, appointment_time, status, doctors(specialty, profiles(full_name))")
     .eq("patient_id", user.id)
@@ -50,8 +50,19 @@ export default async function DashboardPage() {
       <PatientTopNav userName={fullName || user.email || "there"} />
 
       <div className="mx-auto w-full max-w-4xl flex-1 px-5 py-7 sm:px-8">
-        <h1 className="mb-1.5 text-2xl font-bold text-ink sm:text-[26px]">Welcome back, {firstName}</h1>
-        <p className="mb-5 text-base text-muted">Here is what&apos;s coming up.</p>
+        <div className="mb-7 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-gradient-to-br from-primary to-primary-dark px-6 py-5 text-white">
+          <div>
+            <h1 className="mb-1 text-xl font-bold sm:text-2xl">Welcome back, {firstName}</h1>
+            <p className="text-[15px] text-white/75">
+              {appointments.length > 0
+                ? "Here's what's coming up."
+                : "Nothing on your calendar yet, let's fix that."}
+            </p>
+          </div>
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/15 text-base font-bold">
+            {firstName.charAt(0).toUpperCase()}
+          </div>
+        </div>
 
         <div className="mb-7 flex flex-wrap gap-3">
           <Link href="/book" className={buttonClasses("primary", "px-[22px] py-3.5 text-[15px]")}>
@@ -71,7 +82,7 @@ export default async function DashboardPage() {
         <h2 className="mb-3.5 text-lg font-bold text-ink">Upcoming appointments</h2>
         {appointments.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {appointments.map((a) => (
+            {appointments.map((a, i) => (
               <AppointmentCard
                 key={a.id}
                 id={a.id}
@@ -80,6 +91,7 @@ export default async function DashboardPage() {
                 date={a.appointment_date}
                 time={a.appointment_time}
                 status={a.status}
+                featured={i === 0}
               />
             ))}
           </div>
