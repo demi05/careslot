@@ -4,7 +4,7 @@ import { DoctorScheduleManager, type DoctorListItem } from "@/components/staff/D
 
 export default async function StaffDoctorsPage() {
   await requireStaff(["front-desk", "admin"]);
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data } = await supabase.from("doctors").select("id, specialty, profiles(full_name)").order("id");
 

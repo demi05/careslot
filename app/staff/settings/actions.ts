@@ -60,7 +60,7 @@ export async function createStaffMemberAction(
 export async function updateStaffRoleAction(userId: string, role: "front-desk" | "admin"): Promise<ActionResult> {
   await requireStaff(["admin"]);
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.from("profiles").update({ role }).eq("id", userId);
   if (error) return { error: error.message };
 
@@ -71,7 +71,7 @@ export async function updateStaffRoleAction(userId: string, role: "front-desk" |
 export async function toggleDoctorActiveAction(doctorId: string, isActive: boolean): Promise<ActionResult> {
   await requireStaff(["front-desk", "admin"]);
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.from("doctors").update({ is_active: isActive }).eq("id", doctorId);
   if (error) return { error: error.message };
 
@@ -101,7 +101,7 @@ export async function addRosterEntryAction(
     return { error: "Specialty is required for a doctor." };
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.from("staff_roster").insert({
     email: trimmedEmail,
     full_name: fullName.trim(),
@@ -124,7 +124,7 @@ export async function addRosterEntryAction(
 export async function removeRosterEntryAction(rosterId: string): Promise<ActionResult> {
   await requireStaff(["admin"]);
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.from("staff_roster").delete().eq("id", rosterId);
   if (error) return { error: error.message };
 

@@ -55,7 +55,7 @@ export function MedicationsList({ initialMedications, patientId }: MedicationsLi
             <div className="mb-0.5 text-[15px] font-bold text-[#8A4A16]">
               {pendingCount} medication{pendingCount > 1 ? "s" : ""} ready for pickup
             </div>
-            <div className="text-sm text-[#8A4A16]">Visit the Unity Hospital pharmacy desk to collect.</div>
+            <div className="text-sm text-[#8A4A16]">Visit the pharmacy desk to collect.</div>
           </div>
         </div>
       )}

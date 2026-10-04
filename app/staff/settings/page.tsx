@@ -9,7 +9,7 @@ import {
 
 export default async function StaffSettingsPage() {
   await requireStaff(["admin"]);
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const [{ data: staffData }, { data: doctorsData }, { data: rosterData }] = await Promise.all([
     supabase

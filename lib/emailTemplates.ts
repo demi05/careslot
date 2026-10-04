@@ -10,7 +10,7 @@ function wrapper(bodyHtml: string): string {
         ${bodyHtml}
       </div>
       <div style="padding: 20px 0; text-align: center; font-size: 13px; color: #6B7280;">
-        Unity Hospital, Eleyele, Ibadan, Oyo State
+        CareSlot — your hospital's appointment system
       </div>
     </div>
   `;
@@ -83,7 +83,7 @@ export function medicationReadyEmail({ medicationName }: { medicationName: strin
     html: wrapper(`
       <h1 style="font-size: 18px; margin: 0 0 12px;">Ready for pickup</h1>
       <p style="font-size: 15px; line-height: 1.5;">
-        <strong>${medicationName}</strong> is ready for you to collect from the Unity Hospital pharmacy desk.
+        <strong>${medicationName}</strong> is ready for you to collect from the pharmacy desk.
       </p>
     `),
   };
