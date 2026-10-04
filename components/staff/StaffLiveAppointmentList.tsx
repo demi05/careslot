@@ -4,7 +4,6 @@ import { useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRealtimeRefresh } from "@/lib/supabase/useRealtimeRefresh";
 import { staffUpdateAppointmentStatusAction } from "@/app/staff/appointments/actions";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatTime } from "@/lib/format";
 
 export interface StaffAppointmentRow {
@@ -34,6 +33,20 @@ const statusOptions: { value: "confirmed" | "pending" | "no-show"; label: string
   { value: "no-show", label: "No-show" },
 ];
 
+const statusDot: Record<string, string> = {
+  confirmed: "#16A34A",
+  pending: "#B45309",
+  "no-show": "#DC2626",
+  cancelled: "#9CA3AF",
+};
+
+const statusStyles: Record<string, string> = {
+  confirmed: "bg-[#E3F5EA] text-[#137A3A]",
+  pending: "bg-[#FDF1E1] text-[#B45309]",
+  "no-show": "bg-[#FDE8E8] text-[#B91C1C]",
+  cancelled: "bg-gray-100 text-gray-500",
+};
+
 interface StaffLiveAppointmentListProps {
   initialAppointments: StaffAppointmentRow[];
   today: string;
@@ -56,28 +69,37 @@ export function StaffLiveAppointmentList({ initialAppointments, today, canEdit }
 
   if (appointments.length === 0) {
     return (
-      <p className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center text-sm text-muted">
+      <p className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted">
         No appointments scheduled for today.
       </p>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-surface">
-      {appointments.map((a) => (
-        <div
-          key={a.id}
-          className="flex flex-wrap items-center gap-4 border-b border-[#F1F2F3] px-5 py-3.5 last:border-b-0"
-        >
-          <div className="w-36 truncate text-sm font-semibold text-ink">{a.patient?.full_name ?? "Patient"}</div>
-          <div className="w-20 text-sm text-muted">{formatTime(a.appointment_time)}</div>
-          <div className="w-40 truncate text-sm text-muted">{a.doctors?.profiles?.full_name ?? "Doctor"}</div>
-          <div className="ml-auto">
+    <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+      {appointments.map((a) => {
+        const initials = (a.patient?.full_name ?? "P").charAt(0).toUpperCase();
+        return (
+          <div key={a.id} className="grid grid-cols-[56px_14px_1fr_auto] items-center gap-3.5 py-2">
+            <span className="text-[13px] font-semibold text-[#4F5F5B]">{formatTime(a.appointment_time)}</span>
+            <span
+              className="h-3 w-3 rounded-full border-[3px] bg-white"
+              style={{ borderColor: statusDot[a.status] ?? "#9CA3AF" }}
+            />
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-primary-tint text-xs font-bold text-primary">
+                {initials}
+              </span>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-semibold text-ink">{a.patient?.full_name ?? "Patient"}</div>
+                <div className="truncate text-xs text-muted">{a.doctors?.profiles?.full_name ?? "Doctor"}</div>
+              </div>
+            </div>
             {canEdit ? (
               <select
                 value={a.status === "cancelled" ? "pending" : a.status}
                 onChange={(e) => handleStatusChange(a.id, e.target.value)}
-                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-[13px] font-semibold text-ink"
+                className={`rounded-full border-0 px-3 py-1.5 text-[11px] font-bold ${statusStyles[a.status] ?? ""}`}
               >
                 {statusOptions.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -86,11 +108,13 @@ export function StaffLiveAppointmentList({ initialAppointments, today, canEdit }
                 ))}
               </select>
             ) : (
-              <StatusBadge status={a.status} />
+              <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${statusStyles[a.status] ?? ""}`}>
+                {a.status}
+              </span>
             )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

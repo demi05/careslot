@@ -29,8 +29,11 @@ export default async function StaffAppointmentsPage() {
   }));
 
   return (
-    <div className="max-w-6xl p-8">
-      <h1 className="mb-5 text-2xl font-bold text-ink">All appointments</h1>
+    <div className="flex min-h-screen flex-col gap-4 p-7">
+      <div>
+        <h1 className="text-[28px] font-bold tracking-[-0.03em] text-ink">Appointments</h1>
+        <p className="text-[13px] text-muted">Every booking across all doctors</p>
+      </div>
       <StaffAppointmentsManager
         initialAppointments={(appointmentsData ?? []) as unknown as StaffAppointmentFull[]}
         doctorOptions={doctorOptions}
