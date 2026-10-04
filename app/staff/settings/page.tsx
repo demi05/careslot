@@ -39,9 +39,8 @@ export default async function StaffSettingsPage() {
   }));
 
   return (
-    <div className="max-w-4xl p-8">
-      <h1 className="mb-1 text-2xl font-bold text-ink">Settings</h1>
-      <p className="mb-6 text-[15px] text-muted">Manage staff accounts and doctor availability.</p>
+    <div className="flex min-h-screen flex-col gap-5 p-7">
+      <h1 className="text-[28px] font-bold tracking-[-0.03em] text-ink">Settings</h1>
       <StaffSettingsManager
         staffMembers={(staffData ?? []) as StaffMemberItem[]}
         doctors={doctors}

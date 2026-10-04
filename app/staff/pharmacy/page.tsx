@@ -22,11 +22,7 @@ export default async function StaffPharmacyPage() {
   ]);
 
   return (
-    <div className="max-w-5xl p-8">
-      <h1 className="mb-1 text-2xl font-bold text-ink">Pharmacy desk</h1>
-      <p className="mb-6 text-[15px] text-muted">
-        Record what each patient collects. Anything left owing shows up in the patient&apos;s app.
-      </p>
+    <div className="min-h-screen p-7">
       <PharmacyDeskManager
         initialMedications={(medicationsData ?? []) as unknown as PharmacyMedicationRow[]}
         patients={(patientsData ?? []) as PatientOption[]}

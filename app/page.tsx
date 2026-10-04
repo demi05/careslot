@@ -121,7 +121,7 @@ export default function LandingPage() {
                 src="/images/patient-smiling-appointment.jpg"
                 alt="Patient smiling while managing her appointment"
                 fill
-                className="object-cover object-[50%_32%]"
+                className="object-cover object-[50%_38%]"
               />
               <div className="absolute inset-x-2 bottom-2 rounded-2xl bg-white/90 px-3.5 py-2.5 backdrop-blur-sm">
                 <div className="text-sm font-bold">Manage from your phone</div>
