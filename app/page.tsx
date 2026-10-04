@@ -1,19 +1,14 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   CalendarCheck,
-  BellRinging,
+  Stethoscope,
+  EnvelopeSimple,
+  ChatText,
   DeviceMobile,
-  ArrowRight,
-  CheckCircle,
 } from "@phosphor-icons/react/dist/ssr";
 import { Logo } from "@/components/ui/Logo";
-import { buttonClasses } from "@/components/ui/Button";
-
-const steps = [
-  { label: "Pick a doctor", detail: "Browse by specialty and see who's actually free this week." },
-  { label: "Choose a slot", detail: "Real-time availability, no calling ahead to check." },
-  { label: "Get reminded", detail: "Email and SMS before your visit, so you never miss it." },
-];
+import { buttonClasses, PillCTAButton } from "@/components/ui/Button";
 
 export default function LandingPage() {
   return (
@@ -25,138 +20,155 @@ export default function LandingPage() {
         </Link>
       </header>
 
-      <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-primary-tint blur-3xl" />
-        <div className="pointer-events-none absolute -left-16 top-48 h-56 w-56 rounded-full bg-accent-tint blur-3xl" />
-
-        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 px-6 py-14 sm:px-8 sm:py-16 lg:grid-cols-[1.05fr_1fr]">
-          <div>
-            <h1 className="mb-4 text-[34px] font-extrabold leading-[1.1] text-primary sm:text-[48px]">
-              Hospital appointments, booked in minutes.
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#CFE4DF] to-[#E7F1EE]">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 py-10 sm:px-8 sm:py-14 lg:grid-cols-[1fr_1.1fr] lg:py-20">
+          <div className="order-2 lg:order-1">
+            <div className="mb-5 flex w-fit items-center gap-2 rounded-full bg-white/80 py-2 pl-2 pr-4 text-sm font-semibold shadow-[0_8px_20px_-12px_rgba(20,35,31,0.4)] backdrop-blur-md">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-white">
+                <CalendarCheck size={14} weight="fill" />
+              </span>
+              Live, updated just now
+            </div>
+            <h1 className="mb-4 text-[34px] font-bold leading-[1.1] tracking-[-0.035em] text-ink sm:text-[46px]">
+              Book your hospital visit in <span className="font-medium italic text-primary">minutes</span>, not
+              mornings.
             </h1>
             <p className="mb-8 max-w-md text-lg text-muted">
-              See which doctors are free, book a slot, and get reminders that
-              actually reach you, by email and SMS.
+              Pick a doctor, choose a free time, skip the queue at the records desk.
             </p>
-            <div className="flex flex-wrap gap-3.5">
-              <Link href="/register" className={buttonClasses("primary", "px-[26px] py-4 text-[17px]")}>
-                Book an appointment
-                <ArrowRight size={18} weight="bold" />
-              </Link>
-              <Link href="/login" className={buttonClasses("outline", "px-[26px] py-3.5 text-[17px]")}>
-                Log in
+            <div className="max-w-xs">
+              <Link href="/register">
+                <PillCTAButton>Book an appointment</PillCTAButton>
               </Link>
             </div>
+            <p className="mt-5 text-sm text-muted">
+              Hospital staff?{" "}
+              <Link href="/login" className="font-semibold text-accent-dark">
+                Sign in here
+              </Link>
+            </p>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[340px]">
-            <div className="absolute inset-0 translate-x-4 translate-y-4 rounded-[2.5rem] bg-primary/10" />
-            <div className="relative overflow-hidden rounded-[2.5rem] border-[6px] border-primary-dark bg-gradient-to-b from-primary to-primary-dark p-5 shadow-[0_32px_64px_rgba(18,64,57,0.28)]">
-              <div className="mb-5 flex items-center justify-between text-white/90">
-                <span className="text-sm font-semibold">Good afternoon, Ada</span>
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-xs font-bold">
-                  A
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-white p-4 shadow-[0_12px_28px_rgba(0,0,0,0.12)]">
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="rounded-full bg-primary-tint px-2.5 py-1 text-[11px] font-bold text-primary">
-                    Upcoming
-                  </span>
-                  <span className="flex items-center gap-1 text-[11px] font-bold text-success">
-                    <CheckCircle size={14} weight="fill" />
-                    Confirmed
-                  </span>
-                </div>
-                <div className="mb-3 flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent-tint text-sm font-bold text-accent-dark">
-                    OE
-                  </div>
-                  <div>
-                    <div className="text-[15px] font-bold text-ink">Dr. Opeyemi Eze</div>
-                    <div className="text-[13px] text-muted">General Practice</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 border-t border-border pt-3 text-[13px] font-semibold text-ink">
-                  <span>Wed, 28 Oct</span>
-                  <span className="text-muted">·</span>
-                  <span>10:30 AM</span>
-                </div>
-              </div>
-
-              <div className="mt-3 flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3 text-white">
-                <span className="text-[13px] font-semibold">Next available slot</span>
-                <span className="text-[13px] font-bold">Today, 2:15 PM</span>
-              </div>
+          <div className="relative order-1 mx-auto aspect-[4/3] w-full max-w-lg lg:order-2">
+            <div className="absolute inset-0 overflow-hidden rounded-[32px]">
+              <Image
+                src="/images/doctor-hero-onboarding.jpg"
+                alt="Smiling Nigerian doctor in a white coat with a stethoscope"
+                fill
+                priority
+                className="object-cover object-[50%_12%]"
+              />
+            </div>
+            <div className="absolute right-4 top-6 flex w-40 -rotate-3 flex-col gap-1.5 rounded-2xl bg-white/85 p-3.5 shadow-[0_18px_40px_-16px_rgba(20,35,31,0.3)] backdrop-blur-md">
+              <span className="text-[11px] text-muted">Next free slot</span>
+              <span className="text-xl font-bold tracking-[-0.02em] text-ink">10:30 am</span>
+              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-primary">
+                <CalendarCheck size={13} weight="fill" />
+                Today, Outpatients
+              </span>
+            </div>
+            <div className="absolute bottom-10 left-2 flex -rotate-2 items-center gap-2.5 rounded-full bg-white py-1.5 pl-1.5 pr-3.5 shadow-[0_14px_30px_-12px_rgba(20,35,31,0.3)]">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-white">
+                <Stethoscope size={17} weight="fill" />
+              </span>
+              <span className="flex flex-col">
+                <span className="text-[13px] font-bold">42 doctors</span>
+                <span className="text-[11px] text-muted">on duty this week</span>
+              </span>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 pb-20 pt-4 sm:px-8">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="rounded-2xl border border-border bg-surface p-7 transition-all duration-150 hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(26,92,82,0.1)] lg:col-span-2">
-            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-tint text-primary">
-              <CalendarCheck size={22} weight="bold" />
-            </div>
-            <h3 className="mb-2 text-xl font-bold text-ink">Real-time slot availability</h3>
-            <p className="mb-5 max-w-md text-[15px] text-muted">
-              See exactly which doctors are free, today or next week, before you book. No calling the front desk to check.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {["9:00", "9:30", "10:15", "11:00", "1:00", "2:15"].map((t, i) => (
-                <span
-                  key={t}
-                  className={`rounded-lg px-3.5 py-2 text-[13px] font-bold ${
-                    i === 2
-                      ? "bg-primary text-white"
-                      : i === 4
-                        ? "cursor-not-allowed bg-background text-muted/50 line-through"
-                        : "border border-border bg-white text-ink"
-                  }`}
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-6">
-            <div className="flex-1 rounded-2xl border border-border bg-surface p-7 transition-all duration-150 hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(26,92,82,0.1)]">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-tint text-accent-dark">
-                <BellRinging size={22} weight="bold" />
-              </div>
-              <h3 className="mb-2 text-lg font-bold text-ink">Reminders that reach you</h3>
-              <p className="text-[15px] text-muted">Sent by email and SMS before every visit.</p>
-            </div>
-            <div className="flex-1 rounded-2xl border border-border bg-surface p-7 transition-all duration-150 hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(26,92,82,0.1)]">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-tint text-primary">
-                <DeviceMobile size={22} weight="bold" />
-              </div>
-              <h3 className="mb-2 text-lg font-bold text-ink">Manage from your phone</h3>
-              <p className="text-[15px] text-muted">Reschedule or cancel anytime, no queues.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-t border-border bg-surface px-6 py-16 sm:px-8">
+      <section className="bg-background px-6 py-14 sm:px-8 sm:py-20">
         <div className="mx-auto max-w-5xl">
-          <h2 className="mb-10 text-center text-2xl font-bold text-ink sm:text-[28px]">How it works</h2>
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-            {steps.map(({ label, detail }, i) => (
-              <div key={label} className="relative">
-                {i < steps.length - 1 && (
-                  <div className="absolute left-[22px] top-[22px] hidden h-px w-full bg-border sm:block" />
-                )}
-                <div className="relative mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-primary text-[15px] font-bold text-white">
-                  {i + 1}
-                </div>
-                <h3 className="mb-1.5 text-[17px] font-bold text-ink">{label}</h3>
-                <p className="text-[15px] text-muted">{detail}</p>
+          <h2 className="mb-8 text-center text-2xl font-bold tracking-[-0.025em] text-ink sm:text-[30px]">
+            Less waiting room. More time for you.
+          </h2>
+
+          <div className="mb-6 overflow-hidden rounded-[32px] bg-gradient-to-br from-primary to-primary-dark p-6 text-white sm:p-8">
+            <span className="text-[13px] text-[#BFD9D3]">Real-time slots</span>
+            <p className="mt-1.5 max-w-xs text-xl font-bold leading-snug tracking-[-0.02em] sm:text-2xl">
+              See every free time the moment it opens.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <span className="flex h-8 items-center rounded-full bg-white/10 px-3.5 text-xs text-[#8FB5AD] line-through">
+                9:15 am
+              </span>
+              <span className="flex h-8 items-center rounded-full bg-white px-3.5 text-xs font-bold text-primary">
+                10:30 am
+              </span>
+              <span className="flex h-8 items-center rounded-full bg-white/15 px-3.5 text-xs">11:15 am</span>
+              <span className="flex h-8 items-center rounded-full bg-white/15 px-3.5 text-xs">1:15 pm</span>
+            </div>
+          </div>
+
+          <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-5">
+            <div className="flex flex-col gap-2.5 rounded-[28px] bg-accent-tint p-5 sm:col-span-2">
+              <div className="flex gap-1.5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-accent">
+                  <EnvelopeSimple size={16} />
+                </span>
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-white">
+                  <ChatText size={16} weight="fill" />
+                </span>
+              </div>
+              <span className="text-[15px] font-bold leading-tight text-ink">Email + SMS reminders</span>
+              <span className="text-xs leading-relaxed text-[#6B5444]">SMS works even on a basic phone.</span>
+            </div>
+            <div className="relative min-h-[170px] overflow-hidden rounded-[28px] sm:col-span-3">
+              <Image
+                src="/images/patient-smiling-appointment.jpg"
+                alt="Patient smiling while managing her appointment"
+                fill
+                className="object-cover object-[50%_32%]"
+              />
+              <div className="absolute inset-x-2 bottom-2 rounded-2xl bg-white/90 px-3.5 py-2.5 backdrop-blur-sm">
+                <div className="text-sm font-bold">Manage from your phone</div>
+                <div className="text-xs text-muted">Reschedule or cancel anytime</div>
+              </div>
+            </div>
+          </div>
+
+          <h3 className="mb-3.5 text-lg font-bold text-ink">How it works</h3>
+          <div className="flex flex-col divide-y divide-dashed divide-[#E3EAE8] rounded-[28px] bg-surface px-5 shadow-[0_12px_28px_-22px_rgba(20,35,31,0.45)]">
+            {[
+              { n: 1, label: "Pick a doctor", bg: "bg-primary" },
+              { n: 2, label: "Choose a free slot", bg: "bg-primary" },
+              { n: 3, label: "Get reminded the day before", bg: "bg-accent" },
+            ].map((step) => (
+              <div key={step.n} className="flex items-center gap-3.5 py-3">
+                <span
+                  className={`flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${step.bg}`}
+                >
+                  {step.n}
+                </span>
+                <span className="text-sm font-medium">{step.label}</span>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-6 pb-16 sm:px-8">
+        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-5">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-tint text-primary">
+              <DeviceMobile size={20} weight="bold" />
+            </span>
+            <span className="text-sm font-semibold text-ink">Works great on any phone browser</span>
+          </div>
+          <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-5">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-tint text-primary">
+              <Stethoscope size={20} weight="bold" />
+            </span>
+            <span className="text-sm font-semibold text-ink">Front desk, doctors and admin, one system</span>
+          </div>
+          <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-5">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-tint text-primary">
+              <ChatText size={20} weight="bold" />
+            </span>
+            <span className="text-sm font-semibold text-ink">Reminders that reach you, even with no data</span>
           </div>
         </div>
       </section>

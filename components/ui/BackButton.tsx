@@ -6,9 +6,9 @@ export function BackButton({ href }: { href: string }) {
     <Link
       href={href}
       aria-label="Go back"
-      className="mb-4 flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white text-ink transition-colors hover:bg-background"
+      className="mb-4 flex h-[46px] w-[46px] items-center justify-center rounded-full bg-white text-ink shadow-[0_8px_20px_-12px_rgba(20,35,31,0.5)] transition-colors hover:bg-background"
     >
-      <ArrowLeft size={16} />
+      <ArrowLeft size={18} />
     </Link>
   );
 }

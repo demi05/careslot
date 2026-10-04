@@ -1,13 +1,10 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import Link from "next/link";
-import { CheckCircle, ArrowLeft } from "@phosphor-icons/react/dist/ssr";
+import { PaperPlaneTilt } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/client";
-import { LogoMark } from "@/components/ui/Logo";
 import { BackButton } from "@/components/ui/BackButton";
 import { TextField } from "@/components/ui/TextField";
-import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 
 export default function ForgotPasswordPage() {
@@ -16,15 +13,12 @@ export default function ForgotPasswordPage() {
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  async function sendResetLink() {
     setError(null);
-
     if (!email.trim()) {
       setError("Enter your email address.");
       return;
     }
-
     setSubmitting(true);
     try {
       const supabase = createClient();
@@ -43,58 +37,73 @@ export default function ForgotPasswordPage() {
     }
   }
 
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    await sendResetLink();
+  }
+
   return (
-    <div className="mx-auto max-w-[420px] animate-fade-in-up px-6 py-16">
+    <div className="mx-auto max-w-[420px] animate-fade-in-up px-6 pb-16 pt-6">
       <BackButton href="/login" />
-      <div className="mb-7 flex flex-col items-center text-center">
-        <div className="mb-3">
-          <LogoMark size={36} />
-        </div>
-        <span className="text-xl font-bold text-primary">CareSlot</span>
-      </div>
 
-      <div className="flex flex-col gap-[18px] rounded-2xl border border-border bg-surface p-7">
-        <div>
-          <h1 className="mb-1.5 text-[19px] font-bold text-ink">Reset your password</h1>
-          <p className="text-sm text-muted">
-            Enter the email on your account and we&apos;ll send a link to reset your password.
+      {sent ? (
+        <div className="flex flex-col gap-3.5 rounded-[42px] bg-gradient-to-br from-primary to-primary-dark p-6 text-white shadow-[0_-20px_50px_-20px_rgba(18,64,57,0.6)]">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent">
+            <PaperPlaneTilt size={26} weight="fill" />
+          </span>
+          <h2 className="text-2xl font-bold leading-tight tracking-[-0.03em]">Link sent. Check your inbox.</h2>
+          <p className="text-[13px] leading-relaxed text-[#BFD9D3]">
+            It expires in 30 minutes. Look in spam if you can&apos;t find it.
           </p>
-        </div>
-
-        {error && <Alert variant="error">{error}</Alert>}
-
-        {sent ? (
-          <div className="flex items-start gap-2.5 rounded-lg border border-success/30 bg-success-tint px-4 py-3.5 text-sm text-success">
-            <CheckCircle size={20} weight="fill" className="shrink-0" />
-            <span>
-              If an account exists for that email, we&apos;ve sent reset instructions. Check your inbox.
-            </span>
+          <div className="flex gap-2">
+            <a
+              href={`mailto:${email}`}
+              className="flex h-12 flex-1 items-center justify-center rounded-full bg-white text-sm font-bold text-primary-dark"
+            >
+              Open email app
+            </a>
+            <button
+              type="button"
+              onClick={sendResetLink}
+              disabled={submitting}
+              className="flex h-12 items-center justify-center rounded-full bg-white/15 px-4 text-sm font-bold disabled:opacity-60"
+            >
+              Resend
+            </button>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-[18px]">
-            <TextField
-              label="Email address"
-              type="email"
-              name="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-            />
-            <Button type="submit" loading={submitting}>
-              Send reset link
-            </Button>
-          </form>
-        )}
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-[18px] pt-4">
+          <h1 className="text-[28px] font-bold leading-[1.1] tracking-[-0.035em] text-ink">
+            Forgot your
+            <br />
+            password?
+          </h1>
+          <p className="-mt-2 text-sm leading-relaxed text-muted">
+            Enter your email and we&apos;ll send a link to set a new one.
+          </p>
 
-        <Link
-          href="/login"
-          className="flex items-center justify-center gap-1.5 text-center text-sm font-semibold text-primary"
-        >
-          <ArrowLeft size={16} />
-          Back to login
-        </Link>
-      </div>
+          {error && <Alert variant="error">{error}</Alert>}
+
+          <TextField
+            label="Email"
+            type="email"
+            name="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+          />
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="flex h-14 items-center justify-center rounded-full bg-primary text-[15px] font-bold text-white disabled:opacity-60"
+          >
+            {submitting ? "Sending…" : "Send reset link"}
+          </button>
+        </form>
+      )}
     </div>
   );
 }

@@ -2,14 +2,15 @@
 
 import { Suspense, useState, FormEvent } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
+import { BellRinging } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/client";
 import { getPostLoginRedirect } from "@/lib/getPostLoginRedirect";
 import { LogoMark } from "@/components/ui/Logo";
-import { BackButton } from "@/components/ui/BackButton";
 import { GoogleButton } from "@/components/ui/GoogleButton";
 import { TextField } from "@/components/ui/TextField";
-import { Button } from "@/components/ui/Button";
+import { PillCTAButton } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 
 interface FieldErrors {
@@ -90,72 +91,87 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[420px] animate-fade-in-up px-6 py-16">
-      <BackButton href="/" />
-      <div className="mb-7 flex flex-col items-center text-center">
-        <div className="mb-3">
-          <LogoMark size={36} />
+    <div className="mx-auto max-w-[420px] animate-fade-in-up">
+      <div className="relative h-[220px]">
+        <div className="absolute inset-0 overflow-hidden rounded-bl-[90px] bg-primary-tint">
+          <Image
+            src="/images/doctor-login-bg.jpg"
+            alt="Doctor holding a stethoscope, smiling"
+            fill
+            className="object-cover object-[50%_20%]"
+          />
+          <div className="absolute left-6 top-6">
+            <LogoMark size={36} />
+          </div>
         </div>
-        <span className="text-xl font-bold text-primary">CareSlot</span>
+        <div className="absolute -bottom-8 right-6 flex -rotate-3 items-center gap-2 rounded-2xl bg-white px-3.5 py-2.5 shadow-[0_16px_30px_-14px_rgba(20,35,31,0.35)]">
+          <BellRinging size={18} weight="fill" className="text-accent" />
+          <span className="text-xs font-bold">Reminder: Thu, 10:30 am</span>
+        </div>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        noValidate
-        className="flex flex-col gap-[18px] rounded-2xl border border-border bg-surface p-7"
-      >
-        <GoogleButton onCredential={handleGoogleCredential} text="continue_with" />
+      <div className="px-6 pb-12 pt-10">
+        <h1 className="mb-6 text-[32px] font-bold leading-[1.05] tracking-[-0.035em] text-ink">
+          Welcome
+          <br />
+          back
+        </h1>
 
-        <div className="flex items-center gap-3 text-[13px] text-gray-400">
-          <div className="h-px flex-1 bg-border" />
-          or continue with email
-          <div className="h-px flex-1 bg-border" />
-        </div>
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-[14px]">
+          <Suspense fallback={null}>
+            <CallbackError />
+          </Suspense>
+          {formError && <Alert variant="error">{formError}</Alert>}
 
-        <Suspense fallback={null}>
-          <CallbackError />
-        </Suspense>
-        {formError && <Alert variant="error">{formError}</Alert>}
+          <TextField
+            label="Email"
+            type="email"
+            name="email"
+            placeholder="you@example.com"
+            value={form.email}
+            onChange={updateField("email")}
+            error={errors.email}
+            autoComplete="email"
+          />
+          <div>
+            <div className="mb-1.5 flex items-center justify-between">
+              <label htmlFor="password" className="text-xs font-semibold text-ink">
+                Password
+              </label>
+              <Link href="/forgot-password" className="text-xs font-semibold text-primary">
+                Forgot password?
+              </Link>
+            </div>
+            <TextField
+              label="Password"
+              hideLabel
+              type="password"
+              name="password"
+              id="password"
+              placeholder="Your password"
+              value={form.password}
+              onChange={updateField("password")}
+              error={errors.password}
+              autoComplete="current-password"
+            />
+          </div>
 
-        <TextField
-          label="Email address"
-          type="email"
-          name="email"
-          placeholder="you@example.com"
-          value={form.email}
-          onChange={updateField("email")}
-          error={errors.email}
-          autoComplete="email"
-        />
-        <TextField
-          label="Password"
-          type="password"
-          name="password"
-          placeholder="Your password"
-          value={form.password}
-          onChange={updateField("password")}
-          error={errors.password}
-          autoComplete="current-password"
-        />
+          <div className="mt-1">
+            <PillCTAButton type="submit" disabled={submitting}>
+              {submitting ? "Signing in…" : "Log in"}
+            </PillCTAButton>
+          </div>
 
-        <Link
-          href="/forgot-password"
-          className="-mt-2 text-right text-sm font-semibold text-primary"
-        >
-          Forgot password?
-        </Link>
+          <GoogleButton onCredential={handleGoogleCredential} text="continue_with" />
 
-        <Button type="submit" loading={submitting}>
-          Log in
-        </Button>
-
-        <p className="text-center text-sm text-muted">
-          New here?{" "}
-          <Link href="/register" className="font-semibold text-primary underline underline-offset-2">
-            Create an account
-          </Link>
-        </p>
-      </form>
+          <p className="text-center text-[13px] text-muted">
+            New to CareSlot?{" "}
+            <Link href="/register" className="font-bold text-accent-dark">
+              Create an account
+            </Link>
+          </p>
+        </form>
+      </div>
     </div>
   );
 }

@@ -2,15 +2,27 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { LockKeyOpen } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/client";
-import { LogoMark } from "@/components/ui/Logo";
 import { TextField } from "@/components/ui/TextField";
-import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 
 interface FieldErrors {
   password?: string;
   confirmPassword?: string;
+}
+
+function passwordStrength(password: string): { score: number; label: string; color: string } {
+  if (!password) return { score: 0, label: "", color: "" };
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+  if (score <= 1) return { score: 1, label: "Weak. Try a longer password.", color: "text-danger" };
+  if (score <= 2) return { score: 2, label: "Okay. Add a number or symbol.", color: "text-warning" };
+  if (score === 3) return { score: 3, label: "Strong. Add a symbol to make it stronger.", color: "text-success" };
+  return { score: 4, label: "Very strong.", color: "text-success" };
 }
 
 export default function ResetPasswordPage() {
@@ -27,6 +39,9 @@ export default function ResetPasswordPage() {
     };
   }
 
+  const strength = passwordStrength(form.password);
+  const mismatch = form.confirmPassword.length > 0 && form.confirmPassword !== form.password;
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setFormError(null);
@@ -38,7 +53,7 @@ export default function ResetPasswordPage() {
       fieldErrors.password = "Password must be at least 8 characters.";
     }
     if (form.confirmPassword !== form.password) {
-      fieldErrors.confirmPassword = "Passwords do not match.";
+      fieldErrors.confirmPassword = "Passwords don't match yet.";
     }
     setErrors(fieldErrors);
     if (Object.keys(fieldErrors).length > 0) return;
@@ -61,28 +76,19 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[420px] animate-fade-in-up px-6 py-16">
-      <div className="mb-7 flex flex-col items-center text-center">
-        <div className="mb-3">
-          <LogoMark size={36} />
-        </div>
-        <span className="text-xl font-bold text-primary">CareSlot</span>
-      </div>
+    <div className="mx-auto max-w-[420px] animate-fade-in-up bg-gradient-to-b from-accent-tint to-background px-6 pb-16 pt-10">
+      <span className="mb-5 flex h-[62px] w-[62px] -rotate-6 items-center justify-center rounded-[22px] bg-white text-accent shadow-[0_14px_30px_-16px_rgba(180,97,31,0.5)]">
+        <LockKeyOpen size={28} />
+      </span>
+      <h1 className="mb-5 text-[28px] font-bold leading-[1.1] tracking-[-0.035em] text-ink">Set a new password</h1>
 
-      <div className="flex flex-col gap-[18px] rounded-2xl border border-border bg-surface p-7">
-        <div>
-          <h1 className="mb-1.5 text-[19px] font-bold text-ink">Set a new password</h1>
-          <p className="text-sm text-muted">
-            Choose a new password for your account.
-          </p>
-        </div>
+      {formError && <Alert variant="error">{formError}</Alert>}
 
-        {formError && <Alert variant="error">{formError}</Alert>}
-
-        {success ? (
-          <Alert variant="success">Password updated. Taking you to log in…</Alert>
-        ) : (
-          <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-[18px]">
+      {success ? (
+        <Alert variant="success">Password updated. Taking you to log in…</Alert>
+      ) : (
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-[18px]">
+          <div>
             <TextField
               label="New password"
               type="password"
@@ -93,6 +99,31 @@ export default function ResetPasswordPage() {
               error={errors.password}
               autoComplete="new-password"
             />
+            {form.password && (
+              <>
+                <div className="mt-2 grid grid-cols-4 gap-1 px-1.5">
+                  {[0, 1, 2, 3].map((i) => (
+                    <span
+                      key={i}
+                      className={`h-[5px] rounded-full ${
+                        i < strength.score
+                          ? strength.score <= 1
+                            ? "bg-danger"
+                            : strength.score <= 2
+                              ? "bg-warning"
+                              : "bg-success"
+                          : "bg-border"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className={`mt-1 block pl-1.5 text-[11px] font-medium ${strength.color}`}>
+                  {strength.label}
+                </span>
+              </>
+            )}
+          </div>
+          <div>
             <TextField
               label="Confirm new password"
               type="password"
@@ -100,15 +131,20 @@ export default function ResetPasswordPage() {
               placeholder="Re-enter password"
               value={form.confirmPassword}
               onChange={updateField("confirmPassword")}
-              error={errors.confirmPassword}
+              error={errors.confirmPassword ?? (mismatch ? "Passwords don't match yet." : undefined)}
               autoComplete="new-password"
             />
-            <Button type="submit" loading={submitting}>
-              Update password
-            </Button>
-          </form>
-        )}
-      </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="flex h-14 items-center justify-center rounded-full bg-primary text-[15px] font-bold text-white disabled:opacity-60"
+          >
+            {submitting ? "Updating…" : "Update password"}
+          </button>
+        </form>
+      )}
     </div>
   );
 }

@@ -53,9 +53,9 @@ export function SlotPicker({ doctorId, onSelect, selected }: SlotPickerProps) {
   }, [selectedDate, loadSlots]);
 
   return (
-    <div>
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-        {days.map((d) => {
+    <div className="flex flex-col gap-4">
+      <div className="flex justify-between gap-1 overflow-x-auto pb-1">
+        {days.slice(0, 6).map((d) => {
           const iso = toISODate(d);
           const active = iso === selectedDate;
           return (
@@ -63,44 +63,55 @@ export function SlotPicker({ doctorId, onSelect, selected }: SlotPickerProps) {
               key={iso}
               type="button"
               onClick={() => setSelectedDate(iso)}
-              className={`shrink-0 rounded-lg border px-3.5 py-2.5 text-[13px] font-semibold transition-colors ${
-                active
-                  ? "border-primary bg-primary text-white"
-                  : "border-border bg-white text-ink hover:bg-background"
+              className={`flex shrink-0 flex-col items-center gap-2 rounded-full px-1 pb-1.5 pt-2.5 ${
+                active ? "bg-primary text-white" : "text-muted"
               }`}
+              style={{ width: 48 }}
             >
-              {formatDayLabel(d)}
+              <span className="text-xs font-medium">{formatDayLabel(d).slice(0, 3)}</span>
+              <span
+                className={`flex h-9 w-9 items-center justify-center rounded-full text-[15px] font-bold ${
+                  active ? "bg-white text-primary" : "text-ink"
+                }`}
+              >
+                {d.getDate()}
+              </span>
             </button>
           );
         })}
       </div>
 
-      {error && <p className="text-sm text-danger">{error}</p>}
-      {!error && loading && <p className="text-sm text-muted">Loading available times…</p>}
-      {!error && !loading && slots.length === 0 && (
-        <p className="text-sm text-muted">No available times on this day. Try another date.</p>
-      )}
-      {!error && !loading && slots.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {slots.map((time) => {
-            const active = selected?.date === selectedDate && selected?.time === time;
-            return (
-              <button
-                key={time}
-                type="button"
-                onClick={() => onSelect(selectedDate, time)}
-                className={`rounded-lg border px-4 py-2.5 text-[13px] font-semibold transition-colors ${
-                  active
-                    ? "border-primary bg-primary text-white"
-                    : "border-[#BEE0D3] bg-[#E6F4EC] text-[#1E7A46] hover:bg-[#CFEBDB]"
-                }`}
-              >
-                {formatTime(time)}
-              </button>
-            );
-          })}
+      <div className="rounded-[28px] bg-surface p-4 shadow-[0_12px_30px_-22px_rgba(20,35,31,0.45)]">
+        <div className="mb-3 flex items-center justify-between px-1">
+          <span className="text-sm font-bold text-ink">Choose a time</span>
+          {!loading && !error && <span className="text-xs text-muted">{slots.length} free</span>}
         </div>
-      )}
+
+        {error && <p className="text-sm text-danger">{error}</p>}
+        {!error && loading && <p className="text-sm text-muted">Loading available times…</p>}
+        {!error && !loading && slots.length === 0 && (
+          <p className="text-sm text-muted">No available times on this day. Try another date.</p>
+        )}
+        {!error && !loading && slots.length > 0 && (
+          <div className="grid grid-cols-3 gap-2">
+            {slots.map((time) => {
+              const active = selected?.date === selectedDate && selected?.time === time;
+              return (
+                <button
+                  key={time}
+                  type="button"
+                  onClick={() => onSelect(selectedDate, time)}
+                  className={`flex h-[38px] items-center justify-center rounded-full text-[13px] font-semibold transition-colors ${
+                    active ? "bg-primary text-white" : "bg-background text-ink hover:bg-primary-tint"
+                  }`}
+                >
+                  {formatTime(time)}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

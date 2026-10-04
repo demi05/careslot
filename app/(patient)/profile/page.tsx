@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { PatientSimpleHeader } from "@/components/patient/PatientSimpleHeader";
 import { PatientBottomTabs } from "@/components/patient/PatientBottomTabs";
 import { ProfileForm } from "@/components/patient/ProfileForm";
 
@@ -25,10 +24,8 @@ export default async function ProfilePage() {
     : "recently";
 
   return (
-    <div className="flex min-h-screen flex-col animate-fade-in-up">
-      <PatientSimpleHeader title="Profile" />
-
-      <div className="mx-auto w-full max-w-lg flex-1 px-5 py-7">
+    <div className="flex min-h-screen flex-col animate-fade-in-up pb-28 sm:pb-0">
+      <div className="mx-auto w-full max-w-lg flex-1 px-5 pb-7 pt-5 sm:px-8">
         <ProfileForm
           userId={user.id}
           email={user.email ?? ""}
