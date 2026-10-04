@@ -8,7 +8,7 @@ import { AppointmentDetailCard } from "@/components/patient/AppointmentDetailCar
 import type { AppointmentWithDoctor } from "@/lib/appointments";
 
 export default async function AppointmentDetailPage({ params }: { params: { id: string } }) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

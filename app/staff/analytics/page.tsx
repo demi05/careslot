@@ -21,7 +21,7 @@ const fullDayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "F
 
 export default async function StaffAnalyticsPage({ searchParams }: { searchParams: { range?: string } }) {
   await requireStaff(["admin"]);
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const selectedRange = RANGE_OPTIONS.find((r) => r.key === searchParams.range) ?? RANGE_OPTIONS[0];
   const startDate = new Date();

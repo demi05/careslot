@@ -92,8 +92,6 @@ export default function LandingPage() {
       </section>
 
       <footer className="border-t border-border px-6 py-8 text-center text-sm text-muted sm:px-8">
-        <div className="mb-1.5 font-semibold text-ink">Unity Hospital, Eleyele</div>
-        <div className="mb-1.5">Eleyele, Ibadan, Oyo State · +234 803 412 7788</div>
         <div>© 2026 CareSlot. All rights reserved.</div>
       </footer>
     </div>

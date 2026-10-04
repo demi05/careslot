@@ -17,7 +17,7 @@ export async function logMedicationAction(
   dosage: string
 ): Promise<ActionResult> {
   const { user } = await requireStaff(["doctor", "front-desk", "admin"]);
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("medications")
@@ -49,7 +49,7 @@ export async function logMedicationAction(
 
 export async function markMedicationCollectedAction(medicationId: string): Promise<ActionResult> {
   await requireStaff(["doctor", "front-desk", "admin"]);
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { error } = await supabase
     .from("medications")

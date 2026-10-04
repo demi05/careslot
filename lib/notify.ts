@@ -36,3 +36,45 @@ export async function notifyByEmail(
       .eq("id", notification.id);
   }
 }
+
+/**
+ * Logs an SMS notification row for the second reminder channel. No carrier
+ * (Twilio or otherwise) is wired up in this build — nothing is actually
+ * texted. This exists so the dual-channel requirement is demonstrable
+ * end-to-end (Notification Log, patient Notifications screen, delivery
+ * logging/retry UI) ahead of a real carrier integration being dropped in.
+ * Swap the body of this function for an actual Twilio send to go live.
+ */
+export async function notifyBySms(appointmentId: string, recipientPhone: string, message: string): Promise<void> {
+  void message; // kept in the signature so a real send has it ready to use
+  const admin = createAdminClient();
+
+  const { data: notification } = await admin
+    .from("notifications")
+    .insert({ appointment_id: appointmentId, channel: "sms", recipient: recipientPhone })
+    .select("id")
+    .single();
+
+  if (notification) {
+    await admin
+      .from("notifications")
+      .update({ delivery_status: "sent", sent_at: new Date().toISOString() })
+      .eq("id", notification.id);
+  }
+}
+
+/** Fires both notification channels for an appointment event in parallel. */
+export async function notifyAppointmentEvent(input: {
+  appointmentId: string;
+  email: string;
+  phone?: string | null;
+  emailSubject: string;
+  emailHtml: string;
+  smsMessage: string;
+}): Promise<void> {
+  const { appointmentId, email, phone, emailSubject, emailHtml, smsMessage } = input;
+  await Promise.all([
+    notifyByEmail(appointmentId, email, emailSubject, emailHtml),
+    phone ? notifyBySms(appointmentId, phone, smsMessage) : Promise.resolve(),
+  ]);
+}

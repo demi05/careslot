@@ -21,7 +21,7 @@ export async function addScheduleWindowAction(
     return { error: "End time must be after start time." };
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.from("doctor_schedules").insert({
     doctor_id: doctorId,
     day_of_week: dayOfWeek,
@@ -41,7 +41,7 @@ export async function addScheduleWindowAction(
 export async function removeScheduleWindowAction(scheduleId: string): Promise<ActionResult> {
   await requireStaff(["front-desk", "admin"]);
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.from("doctor_schedules").delete().eq("id", scheduleId);
 
   if (error) {

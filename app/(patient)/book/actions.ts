@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { notifyByEmail } from "@/lib/notify";
+import { notifyAppointmentEvent } from "@/lib/notify";
 import { appointmentBookedEmail } from "@/lib/emailTemplates";
+import { appointmentBookedSms } from "@/lib/smsTemplates";
 
 interface ActionResult {
   error?: string;
@@ -20,7 +21,7 @@ export async function bookAppointmentAction(
   appointmentTime: string,
   reason: string
 ): Promise<ActionResult> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -49,9 +50,17 @@ export async function bookAppointmentAction(
 
   const appt = data as unknown as BookedAppointment;
   if (user.email) {
+    const { data: profile } = await supabase.from("profiles").select("phone").eq("id", user.id).single();
     const doctorName = appt.doctors?.profiles?.full_name ?? "your doctor";
     const { subject, html } = appointmentBookedEmail({ doctorName, appointmentDate, appointmentTime });
-    await notifyByEmail(appt.id, user.email, subject, html);
+    await notifyAppointmentEvent({
+      appointmentId: appt.id,
+      email: user.email,
+      phone: profile?.phone,
+      emailSubject: subject,
+      emailHtml: html,
+      smsMessage: appointmentBookedSms({ doctorName, appointmentDate, appointmentTime }),
+    });
   }
 
   revalidatePath("/appointments");

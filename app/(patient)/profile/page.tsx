@@ -5,7 +5,7 @@ import { PatientBottomTabs } from "@/components/patient/PatientBottomTabs";
 import { ProfileForm } from "@/components/patient/ProfileForm";
 
 export default async function ProfilePage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

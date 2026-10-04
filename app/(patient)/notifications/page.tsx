@@ -5,7 +5,7 @@ import { PatientBottomTabs } from "@/components/patient/PatientBottomTabs";
 import { NotificationsList, type NotificationRow } from "@/components/patient/NotificationsList";
 
 export default async function NotificationsPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

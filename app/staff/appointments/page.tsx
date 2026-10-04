@@ -8,7 +8,7 @@ import {
 
 export default async function StaffAppointmentsPage() {
   await requireStaff(["front-desk", "admin"]);
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const [{ data: appointmentsData }, { data: doctorsData }] = await Promise.all([
     supabase

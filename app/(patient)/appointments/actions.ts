@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { notifyByEmail } from "@/lib/notify";
+import { notifyAppointmentEvent } from "@/lib/notify";
 import { appointmentCancelledEmail, appointmentRescheduledEmail } from "@/lib/emailTemplates";
+import { appointmentCancelledSms, appointmentRescheduledSms } from "@/lib/smsTemplates";
 
 interface ActionResult {
   error?: string;
@@ -17,7 +18,7 @@ interface AppointmentWithDoctorName {
 }
 
 export async function cancelAppointmentAction(appointmentId: string): Promise<ActionResult> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -34,13 +35,19 @@ export async function cancelAppointmentAction(appointmentId: string): Promise<Ac
 
   const appt = data as unknown as AppointmentWithDoctorName;
   if (user.email) {
+    const { data: profile } = await supabase.from("profiles").select("phone").eq("id", user.id).single();
     const doctorName = appt.doctors?.profiles?.full_name ?? "your doctor";
-    const { subject, html } = appointmentCancelledEmail({
-      doctorName,
-      appointmentDate: appt.appointment_date,
-      appointmentTime: appt.appointment_time,
+    const appointmentDate = appt.appointment_date;
+    const appointmentTime = appt.appointment_time;
+    const { subject, html } = appointmentCancelledEmail({ doctorName, appointmentDate, appointmentTime });
+    await notifyAppointmentEvent({
+      appointmentId,
+      email: user.email,
+      phone: profile?.phone,
+      emailSubject: subject,
+      emailHtml: html,
+      smsMessage: appointmentCancelledSms({ doctorName, appointmentDate, appointmentTime }),
     });
-    await notifyByEmail(appointmentId, user.email, subject, html);
   }
 
   revalidatePath("/appointments");
@@ -53,7 +60,7 @@ export async function rescheduleAppointmentAction(
   appointmentDate: string,
   appointmentTime: string
 ): Promise<ActionResult> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -77,13 +84,17 @@ export async function rescheduleAppointmentAction(
 
   const appt = data as unknown as AppointmentWithDoctorName;
   if (user.email) {
+    const { data: profile } = await supabase.from("profiles").select("phone").eq("id", user.id).single();
     const doctorName = appt.doctors?.profiles?.full_name ?? "your doctor";
-    const { subject, html } = appointmentRescheduledEmail({
-      doctorName,
-      appointmentDate: appt.appointment_date,
-      appointmentTime: appt.appointment_time,
+    const { subject, html } = appointmentRescheduledEmail({ doctorName, appointmentDate, appointmentTime });
+    await notifyAppointmentEvent({
+      appointmentId,
+      email: user.email,
+      phone: profile?.phone,
+      emailSubject: subject,
+      emailHtml: html,
+      smsMessage: appointmentRescheduledSms({ doctorName, appointmentDate, appointmentTime }),
     });
-    await notifyByEmail(appointmentId, user.email, subject, html);
   }
 
   revalidatePath("/appointments");

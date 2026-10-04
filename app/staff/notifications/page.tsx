@@ -4,7 +4,7 @@ import { NotificationLogTable, type NotificationLogRow } from "@/components/staf
 
 export default async function StaffNotificationsPage() {
   await requireStaff(["front-desk", "admin"]);
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data } = await supabase
     .from("notifications")
