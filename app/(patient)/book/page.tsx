@@ -16,7 +16,7 @@ export default async function BookPage() {
 
   const { data } = await supabase
     .from("doctors")
-    .select("id, specialty, profiles(full_name)")
+    .select("id, specialty, photo_url, profiles(full_name)")
     .eq("is_active", true);
 
   const doctors = (data ?? []) as unknown as DoctorOption[];

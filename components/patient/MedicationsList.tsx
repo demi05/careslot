@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Pill, Package } from "@phosphor-icons/react/dist/ssr";
+import { Pill } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/client";
 import { useRealtimeRefresh } from "@/lib/supabase/useRealtimeRefresh";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -44,58 +44,70 @@ export function MedicationsList({ initialMedications, patientId }: MedicationsLi
 
   useRealtimeRefresh("medications", `patient_id=eq.${patientId}`, refetch);
 
-  const pendingCount = medications.filter((m) => m.status === "pending").length;
+  const pending = medications.filter((m) => m.status === "pending");
+  const readyNow = pending[0];
+
+  if (medications.length === 0) {
+    return (
+      <EmptyState
+        icon={<Pill size={22} weight="bold" />}
+        title="No medications on record yet"
+        description="Anything the pharmacy gives you will appear here."
+      />
+    );
+  }
 
   return (
-    <div>
-      {pendingCount > 0 && (
-        <div className="mb-5 flex items-start gap-3 rounded-2xl border border-[#F3D5BC] bg-accent-tint p-4">
-          <Package size={22} weight="fill" className="mt-0.5 shrink-0 text-accent-dark" />
-          <div>
-            <div className="mb-0.5 text-[15px] font-bold text-[#8A4A16]">
-              {pendingCount} medication{pendingCount > 1 ? "s" : ""} ready for pickup
-            </div>
-            <div className="text-sm text-[#8A4A16]">Visit the pharmacy desk to collect.</div>
+    <div className="flex flex-col gap-5">
+      {readyNow && (
+        <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-accent to-accent-dark p-5 text-white">
+          <div className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full bg-white/10" />
+          <span className="relative inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1.5 text-[11px] font-bold text-accent-dark">
+            Ready now
+          </span>
+          <div className="relative mt-3.5 text-2xl font-bold leading-tight tracking-[-0.03em]">
+            {readyNow.medication_name}
+            {readyNow.dosage ? ` ${readyNow.dosage}` : ""}
           </div>
+          <div className="relative mt-1 text-[13px] text-white/80">Visit the pharmacy desk to collect.</div>
+          {pending.length > 1 && (
+            <div className="relative mt-3 text-xs font-semibold text-white/90">
+              +{pending.length - 1} more medication{pending.length - 1 > 1 ? "s" : ""} pending pickup
+            </div>
+          )}
         </div>
       )}
 
-      {medications.length === 0 ? (
-        <EmptyState
-          icon={<Pill size={22} weight="bold" />}
-          title="No medications on record yet"
-          description="Anything the pharmacy gives you will appear here."
-        />
-      ) : (
-        <div className="flex flex-col gap-3">
-          {medications.map((m) => (
-            <div key={m.id} className="rounded-2xl border border-border bg-surface p-5">
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-start gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary-tint text-primary">
-                    <Pill size={18} />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[15px] font-bold text-ink">{m.medication_name}</div>
-                    {m.dosage && <div className="text-[13.5px] text-muted">{m.dosage}</div>}
-                  </div>
+      <div>
+        <span className="mb-2.5 block text-base font-bold text-ink">All logged</span>
+        <div className="rounded-[28px] bg-surface px-3.5 shadow-[0_12px_28px_-22px_rgba(20,35,31,0.45)]">
+          {medications.map((m, i) => (
+            <div
+              key={m.id}
+              className={`flex items-center gap-3 py-3 ${i > 0 ? "border-t border-[#EEF2F1]" : ""}`}
+            >
+              <span
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                  m.status === "pending" ? "bg-accent-tint text-accent-dark" : "bg-primary-tint text-primary"
+                }`}
+              >
+                <Pill size={18} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-bold text-ink">
+                  {m.medication_name}
+                  {m.dosage ? ` ${m.dosage}` : ""}
                 </div>
-                <StatusBadge status={m.status} />
-              </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-[#F1F2F3] pt-3 text-[13.5px] sm:grid-cols-3">
-                <div>
-                  <div className="mb-0.5 text-gray-400">Logged</div>
-                  <div className="font-semibold text-ink">{formatDate(m.logged_at.slice(0, 10))}</div>
-                </div>
-                <div>
-                  <div className="mb-0.5 text-gray-400">Logged by</div>
-                  <div className="font-semibold text-ink">{m.profiles?.full_name ?? "Staff"}</div>
+                <div className="text-[11px] text-muted">
+                  {m.status === "collected" ? "Logged" : "Logged"} {formatDate(m.logged_at.slice(0, 10))}
+                  {m.profiles?.full_name ? ` by ${m.profiles.full_name}` : ""}
                 </div>
               </div>
+              <StatusBadge status={m.status === "pending" ? "pending" : "collected"} />
             </div>
           ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -43,15 +43,13 @@ export function AppointmentsList({ initialAppointments, userId }: AppointmentsLi
 
   return (
     <div>
-      <div className="mb-5 flex flex-wrap gap-2">
+      <div className="mb-5 grid grid-cols-4 gap-1 rounded-full bg-white p-[5px] shadow-[0_10px_24px_-18px_rgba(20,35,31,0.4)]">
         {filters.map((f) => (
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
-              filter === f.key
-                ? "border-primary bg-primary text-white"
-                : "border-border bg-white text-ink hover:bg-background"
+            className={`flex h-10 items-center justify-center rounded-full text-[13px] font-bold transition-colors ${
+              filter === f.key ? "bg-primary text-white" : "text-muted"
             }`}
           >
             {f.label}
@@ -72,6 +70,7 @@ export function AppointmentsList({ initialAppointments, userId }: AppointmentsLi
               key={a.id}
               id={a.id}
               doctorName={a.doctors?.profiles?.full_name ?? null}
+              specialty={a.doctors?.specialty ?? null}
               date={a.appointment_date}
               time={a.appointment_time}
               status={a.status}

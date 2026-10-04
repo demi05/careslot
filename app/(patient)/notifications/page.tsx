@@ -21,10 +21,10 @@ export default async function NotificationsPage() {
     .limit(50);
 
   return (
-    <div className="flex min-h-screen flex-col animate-fade-in-up">
-      <PatientSimpleHeader title="Notifications" />
+    <div className="flex min-h-screen flex-col animate-fade-in-up pb-28 sm:pb-0">
+      <PatientSimpleHeader title="Reminders" />
 
-      <div className="mx-auto w-full max-w-2xl flex-1 px-5 py-5">
+      <div className="mx-auto w-full max-w-2xl flex-1 px-5 py-5 sm:px-8">
         <NotificationsList initialNotifications={(data ?? []) as NotificationRow[]} />
       </div>
 
