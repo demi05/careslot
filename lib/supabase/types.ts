@@ -125,17 +125,23 @@ export type Database = {
           error_message: string | null;
           sent_at: string | null;
           created_at: string;
+          retry_count: number;
+          subject: string | null;
+          body: string | null;
         };
         Insert: {
           appointment_id: string;
           channel: "sms" | "email";
           recipient: string;
           delivery_status?: "pending" | "sent" | "failed";
+          subject?: string | null;
+          body?: string | null;
         };
         Update: {
           delivery_status?: "pending" | "sent" | "failed";
           error_message?: string | null;
           sent_at?: string | null;
+          retry_count?: number;
         };
         Relationships: [];
       };
