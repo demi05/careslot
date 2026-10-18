@@ -5,6 +5,7 @@ import { ArrowClockwise, Bell, EnvelopeSimple, ChatText, CheckCircle, WarningCir
 import { createClient } from "@/lib/supabase/client";
 import { useRealtimeRefresh } from "@/lib/supabase/useRealtimeRefresh";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { retryNotificationAction } from "@/app/staff/notifications/actions";
 
 export interface NotificationLogRow {
   id: string;
@@ -56,8 +57,8 @@ export function NotificationLogTable({ initialNotifications }: { initialNotifica
 
   async function handleRetry(id: string) {
     setRetryingId(id);
-    const supabase = createClient();
-    await supabase.from("notifications").update({ delivery_status: "pending", error_message: null }).eq("id", id);
+    await retryNotificationAction(id);
+    await refetch();
     setRetryingId(null);
   }
 
