@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   SquaresFour,
   CalendarCheck,
+  CalendarPlus,
   Stethoscope,
   Pill,
   ChartDonut,
@@ -26,11 +27,12 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: "/staff/dashboard", label: "Dashboard", icon: SquaresFour, roles: ["doctor", "front-desk", "admin"] },
-  { href: "/staff/appointments", label: "Appointments", icon: CalendarCheck, roles: ["front-desk", "admin"] },
+  { href: "/staff/appointments", label: "Appointments", icon: CalendarCheck, roles: ["doctor", "front-desk", "admin"] },
+  { href: "/staff/schedule", label: "My Schedule", icon: CalendarPlus, roles: ["doctor"] },
   { href: "/staff/doctors", label: "Doctors & Schedules", icon: Stethoscope, roles: ["front-desk", "admin"] },
   { href: "/staff/pharmacy", label: "Pharmacy", icon: Pill, roles: ["doctor", "front-desk", "admin"] },
   { href: "/staff/notifications", label: "Notifications", icon: BellRinging, roles: ["front-desk", "admin"] },
-  { href: "/staff/analytics", label: "Analytics", icon: ChartDonut, roles: ["admin"] },
+  { href: "/staff/analytics", label: "Analytics", icon: ChartDonut, roles: ["front-desk", "admin"] },
   { href: "/staff/profile", label: "My Profile", icon: UserCircle, roles: ["doctor", "front-desk", "admin"] },
   { href: "/staff/settings", label: "Settings", icon: GearSix, roles: ["admin"] },
 ];
@@ -68,7 +70,7 @@ export function StaffSidebar({ role, fullName }: { role: StaffRole; fullName: st
         {visibleItems.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
-          const lockedToAdmin = item.roles.length === 1;
+          const lockedToAdmin = item.roles.length === 1 && item.roles[0] === "admin";
           return (
             <Link
               key={item.href}

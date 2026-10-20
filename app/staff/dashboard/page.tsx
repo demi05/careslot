@@ -5,20 +5,32 @@ import { StatCard } from "@/components/staff/StatCard";
 import { StaffLiveAppointmentList, type StaffAppointmentRow } from "@/components/staff/StaffLiveAppointmentList";
 
 export default async function StaffDashboardPage() {
-  const { role, fullName } = await requireStaff();
+  const { user, role, fullName } = await requireStaff();
   const supabase = await createClient();
   const today = new Date().toISOString().slice(0, 10);
   const startOfDay = `${today}T00:00:00.000Z`;
+  const startOfMonth = `${today.slice(0, 7)}-01`;
+  const isDoctor = role === "doctor";
 
-  const [{ data }, { count: emailCount }, { count: smsCount }] = await Promise.all([
-    supabase
-      .from("appointments")
-      .select(
-        "id, appointment_time, status, patient:profiles!appointments_patient_id_fkey(full_name), doctors(specialty, profiles(full_name))"
-      )
-      .eq("appointment_date", today)
-      .neq("status", "cancelled")
-      .order("appointment_time", { ascending: true }),
+  let todayQuery = supabase
+    .from("appointments")
+    .select(
+      "id, appointment_time, status, patient:profiles!appointments_patient_id_fkey(full_name), doctors(specialty, profiles(full_name))"
+    )
+    .eq("appointment_date", today)
+    .neq("status", "cancelled")
+    .order("appointment_time", { ascending: true });
+  if (isDoctor) todayQuery = todayQuery.eq("doctor_id", user.id);
+
+  const monthQuery = supabase
+    .from("appointments")
+    .select("status")
+    .eq("doctor_id", user.id)
+    .gte("appointment_date", startOfMonth)
+    .lte("appointment_date", today);
+
+  const [{ data }, { count: emailCount }, { count: smsCount }, { data: monthData }] = await Promise.all([
+    todayQuery,
     supabase
       .from("notifications")
       .select("id", { count: "exact", head: true })
@@ -31,6 +43,7 @@ export default async function StaffDashboardPage() {
       .eq("channel", "sms")
       .eq("delivery_status", "sent")
       .gte("sent_at", startOfDay),
+    isDoctor ? monthQuery : Promise.resolve({ data: null }),
   ]);
 
   const appointments = (data ?? []) as unknown as StaffAppointmentRow[];
@@ -38,6 +51,12 @@ export default async function StaffDashboardPage() {
   const pendingCount = appointments.filter((a) => a.status === "pending").length;
   const noShowCount = appointments.filter((a) => a.status === "no-show").length;
   const firstName = (fullName ?? "there").split(" ")[0];
+
+  const monthAppointments = (monthData ?? []) as { status: string }[];
+  const monthTotal = monthAppointments.length;
+  const monthNoShows = monthAppointments.filter((a) => a.status === "no-show").length;
+  const monthConfirmed = monthAppointments.filter((a) => a.status === "confirmed").length;
+  const monthNoShowRate = monthTotal > 0 ? Math.round((monthNoShows / monthTotal) * 1000) / 10 : 0;
 
   const formattedDate = new Date(`${today}T00:00:00`).toLocaleDateString(undefined, {
     weekday: "long",
@@ -104,6 +123,30 @@ export default async function StaffDashboardPage() {
               </div>
             </div>
           </div>
+
+          {isDoctor && (
+            <div className="flex flex-col gap-3 rounded-[26px] bg-surface p-4 shadow-[0_12px_30px_-24px_rgba(20,35,31,0.5)]">
+              <span className="text-sm font-bold text-ink">Your stats this month</span>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="rounded-[18px] bg-primary-tint p-3">
+                  <span className="block text-xl font-bold text-ink">{monthTotal}</span>
+                  <span className="text-[11px] text-muted">Appointments</span>
+                </div>
+                <div className="rounded-[18px] bg-background p-3">
+                  <span className="block text-xl font-bold text-ink">{monthConfirmed}</span>
+                  <span className="text-[11px] text-muted">Confirmed</span>
+                </div>
+                <div className="rounded-[18px] bg-[#FDE8E8] p-3">
+                  <span className="block text-xl font-bold text-[#B91C1C]">{monthNoShows}</span>
+                  <span className="text-[11px] text-[#B91C1C]/80">No-shows</span>
+                </div>
+                <div className="rounded-[18px] bg-background p-3">
+                  <span className="block text-xl font-bold text-ink">{monthNoShowRate}%</span>
+                  <span className="text-[11px] text-muted">No-show rate</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
