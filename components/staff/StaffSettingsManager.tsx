@@ -10,6 +10,7 @@ import {
   removeRosterEntryAction,
 } from "@/app/staff/settings/actions";
 import { Alert } from "@/components/ui/Alert";
+import { Select } from "@/components/ui/Select";
 import type { StaffRole } from "@/lib/auth";
 
 export interface StaffMemberItem {
@@ -207,17 +208,17 @@ function RosterSection({ roster }: { roster: RosterEntryItem[] }) {
           <p className="text-xs text-muted">Only these emails can self-sign up as staff</p>
         </div>
         <form onSubmit={handleAdd} className="flex flex-wrap items-center gap-2">
-          <select
+          <Select
             value={role}
             onChange={(e) => setRole(e.target.value as StaffRole)}
-            className="h-10 rounded-full bg-white px-3 text-xs font-semibold text-ink shadow-[inset_0_0_0_1px_#DCE5E2] focus:outline-none"
+            className="h-10 text-xs font-semibold text-ink"
           >
             {(["doctor", "front-desk", "admin"] as StaffRole[]).map((r) => (
               <option key={r} value={r}>
                 {roleLabels[r]}
               </option>
             ))}
-          </select>
+          </Select>
           <input
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
@@ -380,15 +381,15 @@ function StaffRoleRow({ member }: { member: StaffMemberItem }) {
         {error && <div className="text-[11px] text-danger">{error}</div>}
       </div>
       <span />
-      <select
+      <Select
         value={role}
         disabled={pending}
         onChange={(e) => handleChange(e.target.value as "front-desk" | "admin")}
-        className="h-9 rounded-full px-3 text-xs font-bold text-ink shadow-[inset_0_0_0_1px_#DCE5E2] focus:outline-none disabled:opacity-60"
+        className="h-9 text-xs font-bold text-ink"
       >
         <option value="front-desk">Front desk</option>
         <option value="admin">Administrator</option>
-      </select>
+      </Select>
       <span />
     </div>
   );

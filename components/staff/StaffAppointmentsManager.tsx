@@ -11,6 +11,9 @@ import {
 } from "@/app/staff/appointments/actions";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SlotPicker } from "@/components/patient/SlotPicker";
+import { Select } from "@/components/ui/Select";
+import { DatePickerField } from "@/components/ui/DatePickerField";
+import { NewBookingModal } from "@/components/staff/NewBookingModal";
 import { formatDate, formatTime } from "@/lib/format";
 
 export interface StaffAppointmentFull {
@@ -26,6 +29,11 @@ export interface StaffAppointmentFull {
 export interface DoctorFilterOption {
   id: string;
   name: string;
+}
+
+export interface PatientOption {
+  id: string;
+  full_name: string | null;
 }
 
 const statusStyles: Record<string, string> = {
@@ -61,6 +69,7 @@ async function fetchAppointments(ownDoctorId?: string): Promise<StaffAppointment
 interface StaffAppointmentsManagerProps {
   initialAppointments: StaffAppointmentFull[];
   doctorOptions: DoctorFilterOption[];
+  patientOptions?: PatientOption[];
   /** Doctor's own view: no bulk/confirm/cancel/reschedule actions, no cross-doctor filter — just their own bookings. */
   readOnly?: boolean;
   ownDoctorId?: string;
@@ -69,6 +78,7 @@ interface StaffAppointmentsManagerProps {
 export function StaffAppointmentsManager({
   initialAppointments,
   doctorOptions,
+  patientOptions = [],
   readOnly = false,
   ownDoctorId,
 }: StaffAppointmentsManagerProps) {
@@ -79,6 +89,7 @@ export function StaffAppointmentsManager({
   const [dateFilter, setDateFilter] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [reschedulingId, setReschedulingId] = useState<string | null>(null);
+  const [showNewBooking, setShowNewBooking] = useState(false);
 
   const refetch = useCallback(async () => {
     setAppointments(await fetchAppointments(ownDoctorId));
@@ -152,17 +163,12 @@ export function StaffAppointmentsManager({
             className="h-[46px] w-full rounded-full bg-white pl-11 pr-4 text-[13px] shadow-[inset_0_0_0_1px_#DCE5E2] focus:outline-none focus:shadow-[inset_0_0_0_2px_#1A5C52]"
           />
         </div>
-        <input
-          type="date"
-          value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value)}
-          className="h-[46px] rounded-full bg-white px-4 text-[13px] font-semibold text-ink shadow-[inset_0_0_0_1px_#E2EAE8] focus:outline-none"
-        />
+        <DatePickerField value={dateFilter} onChange={setDateFilter} />
         {!readOnly && (
-          <select
+          <Select
             value={doctorFilter}
             onChange={(e) => setDoctorFilter(e.target.value)}
-            className="h-[46px] rounded-full bg-white px-4 text-[13px] font-semibold text-ink shadow-[inset_0_0_0_1px_#E2EAE8] focus:outline-none"
+            className="h-[46px] text-[13px] font-semibold text-ink"
           >
             <option value="all">All doctors</option>
             {doctorOptions.map((d) => (
@@ -170,11 +176,12 @@ export function StaffAppointmentsManager({
                 {d.name}
               </option>
             ))}
-          </select>
+          </Select>
         )}
         {!readOnly && (
           <button
             type="button"
+            onClick={() => setShowNewBooking(true)}
             className="flex h-[46px] items-center gap-2 rounded-full bg-accent px-5 text-sm font-bold text-white"
           >
             <Plus size={16} />
@@ -182,6 +189,15 @@ export function StaffAppointmentsManager({
           </button>
         )}
       </div>
+
+      {showNewBooking && (
+        <NewBookingModal
+          patients={patientOptions}
+          doctors={doctorOptions}
+          onClose={() => setShowNewBooking(false)}
+          onBooked={refetch}
+        />
+      )}
 
       <div className="flex flex-wrap gap-2">
         {statusFilters.map((f) => (

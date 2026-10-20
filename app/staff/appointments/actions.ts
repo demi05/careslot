@@ -6,11 +6,13 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyAppointmentEvent } from "@/lib/notify";
 import {
+  appointmentBookedEmail,
   appointmentConfirmedEmail,
   appointmentCancelledEmail,
   appointmentRescheduledEmail,
 } from "@/lib/emailTemplates";
 import {
+  appointmentBookedSms,
   appointmentConfirmedSms,
   appointmentCancelledSms,
   appointmentRescheduledSms,
@@ -131,5 +133,54 @@ export async function staffRescheduleAppointmentAction(
   await notifyPatientOfAppointment(appt, appointmentRescheduledEmail, appointmentRescheduledSms);
 
   revalidatePath("/staff/appointments");
+  return {};
+}
+
+/**
+ * Front-desk/admin booking on behalf of a patient (phone calls,
+ * walk-ins) -- the counterpart to the patient's own self-service
+ * booking flow (app/(patient)/book/actions.ts), using the "appointments:
+ * staff book any" RLS policy rather than the patient's own-row one.
+ */
+export async function staffCreateAppointmentAction(
+  patientId: string,
+  doctorId: string,
+  appointmentDate: string,
+  appointmentTime: string,
+  reason?: string
+): Promise<ActionResult> {
+  await requireStaff(["front-desk", "admin"]);
+
+  if (!patientId) return { error: "Choose a patient." };
+  if (!doctorId) return { error: "Choose a doctor." };
+  if (!appointmentDate || !appointmentTime) return { error: "Choose a date and time." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("appointments")
+    .insert({
+      patient_id: patientId,
+      doctor_id: doctorId,
+      appointment_date: appointmentDate,
+      appointment_time: appointmentTime,
+      reason: reason?.trim() || null,
+    })
+    .select("id, patient_id, appointment_date, appointment_time, doctors(profiles(full_name))")
+    .single();
+
+  if (error || !data) {
+    return {
+      error:
+        error?.code === "23505"
+          ? "That slot is already booked. Please pick another time."
+          : (error?.message ?? "Could not create the appointment."),
+    };
+  }
+
+  const appt = data as unknown as AppointmentForNotify;
+  await notifyPatientOfAppointment(appt, appointmentBookedEmail, appointmentBookedSms);
+
+  revalidatePath("/staff/appointments");
+  revalidatePath("/staff/dashboard");
   return {};
 }
