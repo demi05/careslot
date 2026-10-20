@@ -9,9 +9,16 @@ export default async function AppointmentDetailPage({
   params,
   searchParams,
 }: {
-  params: { id: string };
-  searchParams: { action?: string };
+  // Next 14 (pinned in package.json) passes these as plain objects; Next
+  // 15+ made them Promises. Awaiting works correctly either way — await
+  // on a non-Promise value just resolves immediately — so this is safe
+  // regardless of which actually ends up installed.
+  params: Promise<{ id: string }> | { id: string };
+  searchParams: Promise<{ action?: string }> | { action?: string };
 }) {
+  const { id } = await params;
+  const resolvedSearchParams = await searchParams;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -26,7 +33,7 @@ export default async function AppointmentDetailPage({
     .select(
       "id, doctor_id, appointment_date, appointment_time, status, reason, doctors(specialty, photo_url, profiles(full_name))"
     )
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (error || !data) {
@@ -46,7 +53,7 @@ export default async function AppointmentDetailPage({
         <AppointmentDetailCard
           appointment={data as unknown as AppointmentWithDoctor}
           doctorId={data.doctor_id}
-          autoOpenReschedule={searchParams.action === "reschedule"}
+          autoOpenReschedule={resolvedSearchParams.action === "reschedule"}
         />
       </div>
 

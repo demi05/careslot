@@ -18,11 +18,19 @@ const RANGE_OPTIONS = [
 
 const dayAbbrev = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export default async function StaffAnalyticsPage({ searchParams }: { searchParams: { range?: string } }) {
+export default async function StaffAnalyticsPage({
+  searchParams,
+}: {
+  // See the same note in app/(patient)/appointments/[id]/page.tsx — Next
+  // 14 vs 15+ differ on whether this is a plain object or a Promise;
+  // awaiting it is correct either way.
+  searchParams: Promise<{ range?: string }> | { range?: string };
+}) {
   await requireStaff(["front-desk", "admin"]);
   const supabase = await createClient();
+  const resolvedSearchParams = await searchParams;
 
-  const selectedRange = RANGE_OPTIONS.find((r) => r.key === searchParams.range) ?? RANGE_OPTIONS[1];
+  const selectedRange = RANGE_OPTIONS.find((r) => r.key === resolvedSearchParams.range) ?? RANGE_OPTIONS[1];
   const now = new Date();
   const startDate = new Date(now);
   startDate.setDate(startDate.getDate() - selectedRange.days);
