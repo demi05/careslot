@@ -89,6 +89,49 @@ export function medicationReadyEmail({ medicationName }: { medicationName: strin
   };
 }
 
+interface DoctorDigestAppointment {
+  patientName: string;
+  appointmentTime: string;
+}
+
+/** FR7: each doctor's start-of-day summary of that day's scheduled appointments. */
+export function doctorDailyDigestEmail({
+  doctorName,
+  appointmentDate,
+  appointments,
+}: {
+  doctorName: string;
+  appointmentDate: string;
+  appointments: DoctorDigestAppointment[];
+}) {
+  const rows = appointments
+    .map(
+      (a) => `
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #F0F0F0; font-size: 14px; color: #2D2D2D;">${formatTime(a.appointmentTime)}</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #F0F0F0; font-size: 14px; color: #2D2D2D; text-align: right;">${a.patientName}</td>
+        </tr>`
+    )
+    .join("");
+
+  return {
+    subject: `Your CareSlot schedule for ${formatDate(appointmentDate)} — ${appointments.length} appointment${appointments.length === 1 ? "" : "s"}`,
+    html: wrapper(`
+      <h1 style="font-size: 18px; margin: 0 0 12px;">Good morning, ${doctorName}</h1>
+      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 18px;">
+        Here's today's schedule, ${formatDate(appointmentDate)}:
+      </p>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <th style="padding: 0 0 8px; text-align: left; font-size: 12px; color: #6B7280; text-transform: uppercase;">Time</th>
+          <th style="padding: 0 0 8px; text-align: right; font-size: 12px; color: #6B7280; text-transform: uppercase;">Patient</th>
+        </tr>
+        ${rows}
+      </table>
+    `),
+  };
+}
+
 export function staffVerificationCodeEmail({ code }: { code: string }) {
   return {
     subject: `${code} is your CareSlot staff verification code`,
