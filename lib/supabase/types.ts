@@ -128,6 +128,7 @@ export type Database = {
           retry_count: number;
           subject: string | null;
           body: string | null;
+          read_at: string | null;
         };
         Insert: {
           appointment_id: string;
@@ -142,6 +143,7 @@ export type Database = {
           error_message?: string | null;
           sent_at?: string | null;
           retry_count?: number;
+          read_at?: string | null;
         };
         Relationships: [];
       };

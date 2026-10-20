@@ -20,6 +20,10 @@ export default async function NotificationsPage() {
     .order("created_at", { ascending: false })
     .limit(50);
 
+  // Mark everything the patient can see as read now that they've opened
+  // this page -- clears the unread badge in the top/bottom nav.
+  await supabase.from("notifications").update({ read_at: new Date().toISOString() }).is("read_at", null);
+
   return (
     <div className="flex min-h-screen flex-col animate-fade-in-up pb-28 sm:pb-0">
       <PatientSimpleHeader title="Reminders" />
