@@ -10,6 +10,7 @@ import {
   ChartDonut,
   BellRinging,
   GearSix,
+  UserCircle,
   SignOut,
 } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/client";
@@ -30,6 +31,7 @@ const navItems: NavItem[] = [
   { href: "/staff/pharmacy", label: "Pharmacy", icon: Pill, roles: ["doctor", "front-desk", "admin"] },
   { href: "/staff/notifications", label: "Notifications", icon: BellRinging, roles: ["front-desk", "admin"] },
   { href: "/staff/analytics", label: "Analytics", icon: ChartDonut, roles: ["admin"] },
+  { href: "/staff/profile", label: "My Profile", icon: UserCircle, roles: ["doctor", "front-desk", "admin"] },
   { href: "/staff/settings", label: "Settings", icon: GearSix, roles: ["admin"] },
 ];
 
