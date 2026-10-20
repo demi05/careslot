@@ -100,7 +100,7 @@ function AddStaffForm() {
       <div className="pointer-events-none absolute -right-14 -top-14 h-[170px] w-[170px] rounded-full bg-accent/25" />
       <span className="relative text-lg font-bold tracking-[-0.02em]">Add a staff member</span>
       <span className="relative -mt-2 text-xs text-[#BFD9D3]">
-        Creates the account directly. They get a welcome email.
+        Creates the account directly — no email is sent. Share the login email with them and have them use &quot;Forgot password&quot; to set one.
       </span>
 
       {error && <Alert variant="error">{error}</Alert>}
