@@ -11,6 +11,8 @@ export interface NotificationLogRow {
   id: string;
   channel: "sms" | "email";
   recipient: string;
+  subject: string | null;
+  body: string | null;
   delivery_status: "pending" | "sent" | "failed";
   sent_at: string | null;
   created_at: string;
@@ -22,7 +24,7 @@ async function fetchLog(): Promise<NotificationLogRow[]> {
   const { data } = await supabase
     .from("notifications")
     .select(
-      "id, channel, recipient, delivery_status, sent_at, created_at, appointments(appointment_date, patient:profiles!appointments_patient_id_fkey(full_name))"
+      "id, channel, recipient, subject, body, delivery_status, sent_at, created_at, appointments(appointment_date, patient:profiles!appointments_patient_id_fkey(full_name))"
     )
     .order("created_at", { ascending: false })
     .limit(100);
@@ -161,7 +163,9 @@ export function NotificationLogTable({ initialNotifications }: { initialNotifica
                   </div>
                   <div className="truncate text-[11px] text-muted">{n.recipient}</div>
                 </div>
-                <span className="truncate text-[13px] text-ink">Appointment reminder</span>
+                <span className="truncate text-[13px] text-ink">
+                  {n.subject || n.body || (n.channel === "sms" ? "SMS reminder" : "Appointment notification")}
+                </span>
                 <span className={`flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${style.bg}`}>
                   <StatusIcon size={12} />
                   {n.delivery_status}
