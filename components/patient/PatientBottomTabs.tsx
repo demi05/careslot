@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { House, CalendarBlank, Bell, User } from "@phosphor-icons/react/dist/ssr";
+import { useUnreadNotificationCount } from "@/lib/supabase/useUnreadNotificationCount";
 
 const tabs = [
   { href: "/dashboard", label: "Dashboard", icon: House },
@@ -13,6 +14,7 @@ const tabs = [
 
 export function PatientBottomTabs() {
   const pathname = usePathname();
+  const unreadCount = useUnreadNotificationCount();
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-5 z-20 flex justify-center sm:hidden">
@@ -24,11 +26,14 @@ export function PatientBottomTabs() {
               key={href}
               href={href}
               aria-label={label}
-              className={`flex items-center justify-center rounded-full transition-colors ${
+              className={`relative flex items-center justify-center rounded-full transition-colors ${
                 active ? "h-[54px] w-[54px] bg-primary text-white" : "h-[50px] w-[50px] text-muted"
               }`}
             >
               <Icon size={active ? 22 : 21} weight={active ? "fill" : "regular"} />
+              {href === "/notifications" && unreadCount > 0 && (
+                <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-accent ring-2 ring-white" />
+              )}
             </Link>
           );
         })}
