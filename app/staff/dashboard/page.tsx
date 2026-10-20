@@ -50,7 +50,7 @@ export default async function StaffDashboardPage() {
   const confirmedCount = appointments.filter((a) => a.status === "confirmed").length;
   const pendingCount = appointments.filter((a) => a.status === "pending").length;
   const noShowCount = appointments.filter((a) => a.status === "no-show").length;
-  const firstName = (fullName ?? "there").split(" ")[0];
+  const firstName = (fullName ?? "").replace(/^dr\.?\s+/i, "").trim().split(" ")[0] || "there";
 
   const monthAppointments = (monthData ?? []) as { status: string }[];
   const monthTotal = monthAppointments.length;
