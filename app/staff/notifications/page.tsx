@@ -9,7 +9,7 @@ export default async function StaffNotificationsPage() {
   const { data } = await supabase
     .from("notifications")
     .select(
-      "id, channel, recipient, delivery_status, sent_at, created_at, appointments(appointment_date, patient:profiles!appointments_patient_id_fkey(full_name))"
+      "id, channel, recipient, subject, body, delivery_status, sent_at, created_at, appointments(appointment_date, patient:profiles!appointments_patient_id_fkey(full_name))"
     )
     .order("created_at", { ascending: false })
     .limit(100);

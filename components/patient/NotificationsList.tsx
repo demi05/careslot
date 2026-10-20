@@ -10,6 +10,8 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 export interface NotificationRow {
   id: string;
   channel: "sms" | "email";
+  subject: string | null;
+  body: string | null;
   delivery_status: "pending" | "sent" | "failed";
   sent_at: string | null;
   created_at: string;
@@ -21,7 +23,7 @@ async function fetchNotifications(): Promise<NotificationRow[]> {
   const supabase = createClient();
   const { data } = await supabase
     .from("notifications")
-    .select("id, channel, delivery_status, sent_at, created_at")
+    .select("id, channel, subject, body, delivery_status, sent_at, created_at")
     .order("created_at", { ascending: false })
     .limit(50);
   return data ?? [];
@@ -77,7 +79,7 @@ export function NotificationsList({ initialNotifications }: { initialNotificatio
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-[13px] font-bold leading-snug text-ink">
-                  Appointment reminder, {n.channel === "sms" ? "SMS" : "Email"}
+                  {n.subject || n.body || (n.channel === "sms" ? "SMS reminder" : "Appointment notification")}
                 </div>
                 <div className="mt-0.5 text-[11px] text-muted">
                   {n.channel === "sms" ? "SMS" : "Email"},{" "}
