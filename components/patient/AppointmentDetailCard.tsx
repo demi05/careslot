@@ -23,11 +23,12 @@ import type { AppointmentWithDoctor } from "@/lib/appointments";
 interface AppointmentDetailCardProps {
   appointment: AppointmentWithDoctor;
   doctorId: string;
+  autoOpenReschedule?: boolean;
 }
 
-export function AppointmentDetailCard({ appointment: initial, doctorId }: AppointmentDetailCardProps) {
+export function AppointmentDetailCard({ appointment: initial, doctorId, autoOpenReschedule }: AppointmentDetailCardProps) {
   const [appointment, setAppointment] = useState(initial);
-  const [showReschedule, setShowReschedule] = useState(false);
+  const [showReschedule, setShowReschedule] = useState(!!autoOpenReschedule);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

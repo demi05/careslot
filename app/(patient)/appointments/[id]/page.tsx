@@ -5,7 +5,13 @@ import { PatientBottomTabs } from "@/components/patient/PatientBottomTabs";
 import { AppointmentDetailCard } from "@/components/patient/AppointmentDetailCard";
 import type { AppointmentWithDoctor } from "@/lib/appointments";
 
-export default async function AppointmentDetailPage({ params }: { params: { id: string } }) {
+export default async function AppointmentDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams: { action?: string };
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -37,7 +43,11 @@ export default async function AppointmentDetailPage({ params }: { params: { id: 
       <PatientTopNav userName={fullName || user.email || "there"} />
 
       <div className="mx-auto w-full max-w-2xl flex-1 px-5 py-6 sm:px-8">
-        <AppointmentDetailCard appointment={data as unknown as AppointmentWithDoctor} doctorId={data.doctor_id} />
+        <AppointmentDetailCard
+          appointment={data as unknown as AppointmentWithDoctor}
+          doctorId={data.doctor_id}
+          autoOpenReschedule={searchParams.action === "reschedule"}
+        />
       </div>
 
       <PatientBottomTabs />

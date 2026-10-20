@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Clock, ArrowsClockwise } from "@phosphor-icons/react/dist/ssr";
 import { StatusBadge, type Status } from "@/components/ui/StatusBadge";
 import { formatDate, formatTime } from "@/lib/format";
@@ -32,7 +33,7 @@ function Avatar({ name, photoUrl, size, rounded }: { name: string | null; photoU
   );
 }
 
-export function AppointmentCard({ doctorName, specialty, date, time, status, doctorPhotoUrl, featured }: AppointmentCardData) {
+export function AppointmentCard({ id, doctorName, specialty, date, time, status, doctorPhotoUrl, featured }: AppointmentCardData) {
   if (featured) {
     return (
       <div className="relative overflow-hidden rounded-[32px] bg-primary shadow-[0_24px_40px_-22px_rgba(26,92,82,0.7)]">
@@ -61,13 +62,19 @@ export function AppointmentCard({ doctorName, specialty, date, time, status, doc
             </span>
           </div>
           <div className="flex gap-2">
-            <span className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-white text-[13px] font-bold text-ink">
+            <Link
+              href={`/appointments/${id}?action=reschedule`}
+              className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-white text-[13px] font-bold text-ink"
+            >
               <ArrowsClockwise size={14} />
               Reschedule
-            </span>
-            <span className="flex h-10 flex-1 items-center justify-center rounded-full bg-accent text-[13px] font-bold text-white">
+            </Link>
+            <Link
+              href={`/appointments/${id}`}
+              className="flex h-10 flex-1 items-center justify-center rounded-full bg-accent text-[13px] font-bold text-white"
+            >
               Details
-            </span>
+            </Link>
           </div>
         </div>
       </div>
@@ -75,7 +82,10 @@ export function AppointmentCard({ doctorName, specialty, date, time, status, doc
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-[26px] bg-surface p-3.5 shadow-[0_10px_24px_-18px_rgba(20,35,31,0.4)] transition-all duration-150 hover:-translate-y-0.5">
+    <Link
+      href={`/appointments/${id}`}
+      className="flex flex-col gap-3 rounded-[26px] bg-surface p-3.5 shadow-[0_10px_24px_-18px_rgba(20,35,31,0.4)] transition-all duration-150 hover:-translate-y-0.5"
+    >
       <div className="flex items-start justify-between gap-2">
         <Avatar name={doctorName} photoUrl={doctorPhotoUrl} size={42} rounded="rounded-full" />
         <StatusBadge status={status} />
@@ -87,6 +97,6 @@ export function AppointmentCard({ doctorName, specialty, date, time, status, doc
       <span className="text-xs font-semibold text-primary">
         {formatDate(date)}, {formatTime(time)}
       </span>
-    </div>
+    </Link>
   );
 }
