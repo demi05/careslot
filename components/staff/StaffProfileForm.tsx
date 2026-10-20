@@ -5,6 +5,7 @@ import { Camera, FloppyDisk } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/client";
 import { TextField } from "@/components/ui/TextField";
 import { Alert } from "@/components/ui/Alert";
+import { formatDoctorName } from "@/lib/format";
 import type { StaffRole } from "@/lib/auth";
 
 interface StaffProfileFormProps {
@@ -87,10 +88,11 @@ export function StaffProfileForm({
     setError(null);
     setSuccess(false);
     const supabase = createClient();
+    const normalizedName = isDoctor ? formatDoctorName(fullName) : fullName.trim();
 
     const { error: profileError } = await supabase
       .from("profiles")
-      .update({ full_name: fullName.trim() || null, phone: phone.trim() || null })
+      .update({ full_name: normalizedName || null, phone: phone.trim() || null })
       .eq("id", userId);
 
     if (profileError) {
@@ -108,6 +110,7 @@ export function StaffProfileForm({
       }
     }
 
+    setFullName(normalizedName);
     setSaving(false);
     setSuccess(true);
   }
