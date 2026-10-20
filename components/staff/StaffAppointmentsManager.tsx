@@ -43,9 +43,9 @@ const statusFilters: { key: string; label: string }[] = [
   { key: "cancelled", label: "Cancelled" },
 ];
 
-async function fetchAppointments(): Promise<StaffAppointmentFull[]> {
+async function fetchAppointments(ownDoctorId?: string): Promise<StaffAppointmentFull[]> {
   const supabase = createClient();
-  const { data } = await supabase
+  let query = supabase
     .from("appointments")
     .select(
       "id, appointment_date, appointment_time, status, doctor_id, patient:profiles!appointments_patient_id_fkey(full_name), doctors(specialty, profiles(full_name))"
@@ -53,15 +53,25 @@ async function fetchAppointments(): Promise<StaffAppointmentFull[]> {
     .order("appointment_date", { ascending: false })
     .order("appointment_time", { ascending: false })
     .limit(200);
+  if (ownDoctorId) query = query.eq("doctor_id", ownDoctorId);
+  const { data } = await query;
   return (data ?? []) as unknown as StaffAppointmentFull[];
 }
 
 interface StaffAppointmentsManagerProps {
   initialAppointments: StaffAppointmentFull[];
   doctorOptions: DoctorFilterOption[];
+  /** Doctor's own view: no bulk/confirm/cancel/reschedule actions, no cross-doctor filter — just their own bookings. */
+  readOnly?: boolean;
+  ownDoctorId?: string;
 }
 
-export function StaffAppointmentsManager({ initialAppointments, doctorOptions }: StaffAppointmentsManagerProps) {
+export function StaffAppointmentsManager({
+  initialAppointments,
+  doctorOptions,
+  readOnly = false,
+  ownDoctorId,
+}: StaffAppointmentsManagerProps) {
   const [appointments, setAppointments] = useState(initialAppointments);
   const [search, setSearch] = useState("");
   const [doctorFilter, setDoctorFilter] = useState("all");
@@ -71,8 +81,8 @@ export function StaffAppointmentsManager({ initialAppointments, doctorOptions }:
   const [reschedulingId, setReschedulingId] = useState<string | null>(null);
 
   const refetch = useCallback(async () => {
-    setAppointments(await fetchAppointments());
-  }, []);
+    setAppointments(await fetchAppointments(ownDoctorId));
+  }, [ownDoctorId]);
 
   useRealtimeRefresh("appointments", undefined, refetch);
 
@@ -148,25 +158,29 @@ export function StaffAppointmentsManager({ initialAppointments, doctorOptions }:
           onChange={(e) => setDateFilter(e.target.value)}
           className="h-[46px] rounded-full bg-white px-4 text-[13px] font-semibold text-ink shadow-[inset_0_0_0_1px_#E2EAE8] focus:outline-none"
         />
-        <select
-          value={doctorFilter}
-          onChange={(e) => setDoctorFilter(e.target.value)}
-          className="h-[46px] rounded-full bg-white px-4 text-[13px] font-semibold text-ink shadow-[inset_0_0_0_1px_#E2EAE8] focus:outline-none"
-        >
-          <option value="all">All doctors</option>
-          {doctorOptions.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          className="flex h-[46px] items-center gap-2 rounded-full bg-accent px-5 text-sm font-bold text-white"
-        >
-          <Plus size={16} />
-          New booking
-        </button>
+        {!readOnly && (
+          <select
+            value={doctorFilter}
+            onChange={(e) => setDoctorFilter(e.target.value)}
+            className="h-[46px] rounded-full bg-white px-4 text-[13px] font-semibold text-ink shadow-[inset_0_0_0_1px_#E2EAE8] focus:outline-none"
+          >
+            <option value="all">All doctors</option>
+            {doctorOptions.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </select>
+        )}
+        {!readOnly && (
+          <button
+            type="button"
+            className="flex h-[46px] items-center gap-2 rounded-full bg-accent px-5 text-sm font-bold text-white"
+          >
+            <Plus size={16} />
+            New booking
+          </button>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -198,28 +212,42 @@ export function StaffAppointmentsManager({ initialAppointments, doctorOptions }:
         />
       ) : (
         <div className="overflow-hidden rounded-[30px] bg-surface shadow-[0_12px_30px_-24px_rgba(20,35,31,0.5)]">
-          <div className="grid grid-cols-[44px_1.4fr_1.5fr_1fr_0.9fr_230px] items-center px-5 py-3.5 text-xs font-semibold text-muted">
-            <span />
+          <div
+            className={
+              readOnly
+                ? "grid grid-cols-[1.4fr_1.5fr_1fr_0.9fr] items-center px-5 py-3.5 text-xs font-semibold text-muted"
+                : "grid grid-cols-[44px_1.4fr_1.5fr_1fr_0.9fr_230px] items-center px-5 py-3.5 text-xs font-semibold text-muted"
+            }
+          >
+            {!readOnly && <span />}
             <span>Patient</span>
             <span>Doctor</span>
             <span>Date and time</span>
             <span>Status</span>
-            <span className="text-right">Actions</span>
+            {!readOnly && <span className="text-right">Actions</span>}
           </div>
           {filtered.map((a) => {
             const initials = (a.patient?.full_name ?? "P").charAt(0).toUpperCase();
             return (
               <div key={a.id} className="border-t border-[#EEF2F1]">
-                <div className="grid grid-cols-[44px_1.4fr_1.5fr_1fr_0.9fr_230px] items-center px-5 py-2.5">
-                  <button
-                    type="button"
-                    onClick={() => toggleSelected(a.id)}
-                    className={`flex h-[22px] w-[22px] items-center justify-center rounded-[8px] text-white ${
-                      selected.has(a.id) ? "bg-primary" : "shadow-[inset_0_0_0_1px_#DCE5E2]"
-                    }`}
-                  >
-                    {selected.has(a.id) && <Check size={13} weight="bold" />}
-                  </button>
+                <div
+                  className={
+                    readOnly
+                      ? "grid grid-cols-[1.4fr_1.5fr_1fr_0.9fr] items-center px-5 py-2.5"
+                      : "grid grid-cols-[44px_1.4fr_1.5fr_1fr_0.9fr_230px] items-center px-5 py-2.5"
+                  }
+                >
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => toggleSelected(a.id)}
+                      className={`flex h-[22px] w-[22px] items-center justify-center rounded-[8px] text-white ${
+                        selected.has(a.id) ? "bg-primary" : "shadow-[inset_0_0_0_1px_#DCE5E2]"
+                      }`}
+                    >
+                      {selected.has(a.id) && <Check size={13} weight="bold" />}
+                    </button>
+                  )}
                   <div className="flex min-w-0 items-center gap-2.5">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-tint text-xs font-bold text-primary">
                       {initials}
@@ -238,38 +266,40 @@ export function StaffAppointmentsManager({ initialAppointments, doctorOptions }:
                   <span className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-bold ${statusStyles[a.status]}`}>
                     {a.status}
                   </span>
-                  <div className="flex justify-end gap-1.5">
-                    {a.status !== "confirmed" && a.status !== "cancelled" && (
-                      <button
-                        type="button"
-                        onClick={() => updateStatus(a.id, "confirmed")}
-                        className="flex h-8 items-center rounded-full bg-primary-tint px-3 text-xs font-bold text-primary"
-                      >
-                        Confirm
-                      </button>
-                    )}
-                    {a.status !== "cancelled" && (
-                      <button
-                        type="button"
-                        onClick={() => setReschedulingId(reschedulingId === a.id ? null : a.id)}
-                        className="flex h-8 items-center rounded-full px-3 text-xs font-bold text-ink shadow-[inset_0_0_0_1px_#DCE5E2]"
-                      >
-                        Reschedule
-                      </button>
-                    )}
-                    {a.status !== "cancelled" && (
-                      <button
-                        type="button"
-                        onClick={() => updateStatus(a.id, "cancelled")}
-                        aria-label="Cancel"
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-danger shadow-[inset_0_0_0_1px_#F3C4C4]"
-                      >
-                        <X size={14} />
-                      </button>
-                    )}
-                  </div>
+                  {!readOnly && (
+                    <div className="flex justify-end gap-1.5">
+                      {a.status !== "confirmed" && a.status !== "cancelled" && (
+                        <button
+                          type="button"
+                          onClick={() => updateStatus(a.id, "confirmed")}
+                          className="flex h-8 items-center rounded-full bg-primary-tint px-3 text-xs font-bold text-primary"
+                        >
+                          Confirm
+                        </button>
+                      )}
+                      {a.status !== "cancelled" && (
+                        <button
+                          type="button"
+                          onClick={() => setReschedulingId(reschedulingId === a.id ? null : a.id)}
+                          className="flex h-8 items-center rounded-full px-3 text-xs font-bold text-ink shadow-[inset_0_0_0_1px_#DCE5E2]"
+                        >
+                          Reschedule
+                        </button>
+                      )}
+                      {a.status !== "cancelled" && (
+                        <button
+                          type="button"
+                          onClick={() => updateStatus(a.id, "cancelled")}
+                          aria-label="Cancel"
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-danger shadow-[inset_0_0_0_1px_#F3C4C4]"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
-                {reschedulingId === a.id && (
+                {!readOnly && reschedulingId === a.id && (
                   <div className="border-t border-[#EEF2F1] bg-background px-5 py-4">
                     <SlotPicker doctorId={a.doctor_id} onSelect={(date, time) => handleReschedule(a.id, date, time)} />
                   </div>
@@ -280,7 +310,7 @@ export function StaffAppointmentsManager({ initialAppointments, doctorOptions }:
         </div>
       )}
 
-      {selected.size > 0 && (
+      {!readOnly && selected.size > 0 && (
         <div className="fixed bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3.5 rounded-full bg-primary-dark py-2 pl-5 pr-2 text-white shadow-[0_20px_40px_-16px_rgba(18,64,57,0.7)]">
           <span className="text-[13px] font-bold">{selected.size} selected</span>
           <button

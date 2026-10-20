@@ -19,7 +19,7 @@ const RANGE_OPTIONS = [
 const dayAbbrev = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default async function StaffAnalyticsPage({ searchParams }: { searchParams: { range?: string } }) {
-  await requireStaff(["admin"]);
+  await requireStaff(["front-desk", "admin"]);
   const supabase = await createClient();
 
   const selectedRange = RANGE_OPTIONS.find((r) => r.key === searchParams.range) ?? RANGE_OPTIONS[1];

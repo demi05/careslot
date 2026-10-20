@@ -18,7 +18,7 @@ export interface DoctorListItem {
   full_name: string | null;
 }
 
-interface ScheduleBlock {
+export interface ScheduleBlock {
   id: string;
   day_of_week: number;
   start_time: string;
@@ -269,7 +269,7 @@ interface ScheduleEditorProps {
   onChange: () => void;
 }
 
-function ScheduleEditor({ doctorId, schedules, onChange }: ScheduleEditorProps) {
+export function ScheduleEditor({ doctorId, schedules, onChange }: ScheduleEditorProps) {
   const [dayOfWeek, setDayOfWeek] = useState(1);
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
