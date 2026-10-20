@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRealtimeRefresh } from "@/lib/supabase/useRealtimeRefresh";
 import { staffUpdateAppointmentStatusAction } from "@/app/staff/appointments/actions";
+import { Select } from "@/components/ui/Select";
 import { formatTime } from "@/lib/format";
 
 export interface StaffAppointmentRow {
@@ -96,17 +97,17 @@ export function StaffLiveAppointmentList({ initialAppointments, today, canEdit }
               </div>
             </div>
             {canEdit ? (
-              <select
+              <Select
                 value={a.status === "cancelled" ? "pending" : a.status}
                 onChange={(e) => handleStatusChange(a.id, e.target.value)}
-                className={`rounded-full border-0 px-3 py-1.5 text-[11px] font-bold ${statusStyles[a.status] ?? ""}`}
+                className={`border-0 py-1.5 text-[11px] font-bold ${statusStyles[a.status] ?? ""}`}
               >
                 {statusOptions.map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             ) : (
               <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${statusStyles[a.status] ?? ""}`}>
                 {a.status}

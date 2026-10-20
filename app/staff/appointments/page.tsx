@@ -4,6 +4,7 @@ import {
   StaffAppointmentsManager,
   type StaffAppointmentFull,
   type DoctorFilterOption,
+  type PatientOption,
 } from "@/components/staff/StaffAppointmentsManager";
 
 export default async function StaffAppointmentsPage() {
@@ -21,9 +22,10 @@ export default async function StaffAppointmentsPage() {
     .limit(200);
   if (isDoctor) appointmentsQuery = appointmentsQuery.eq("doctor_id", user.id);
 
-  const [{ data: appointmentsData }, { data: doctorsData }] = await Promise.all([
+  const [{ data: appointmentsData }, { data: doctorsData }, { data: patientsData }] = await Promise.all([
     appointmentsQuery,
     isDoctor ? Promise.resolve({ data: null }) : supabase.from("doctors").select("id, profiles(full_name)").eq("is_active", true),
+    isDoctor ? Promise.resolve({ data: null }) : supabase.from("profiles").select("id, full_name").eq("role", "patient").order("full_name"),
   ]);
 
   const doctorRows = (doctorsData ?? []) as unknown as { id: string; profiles: { full_name: string | null } | null }[];
@@ -41,6 +43,7 @@ export default async function StaffAppointmentsPage() {
       <StaffAppointmentsManager
         initialAppointments={(appointmentsData ?? []) as unknown as StaffAppointmentFull[]}
         doctorOptions={doctorOptions}
+        patientOptions={(patientsData ?? []) as PatientOption[]}
         readOnly={isDoctor}
         ownDoctorId={isDoctor ? user.id : undefined}
       />

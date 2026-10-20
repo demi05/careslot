@@ -8,6 +8,7 @@ import { addScheduleWindowAction, removeScheduleWindowAction } from "@/app/staff
 import { createStaffMemberAction, toggleDoctorActiveAction } from "@/app/staff/settings/actions";
 import { TextField } from "@/components/ui/TextField";
 import { Alert } from "@/components/ui/Alert";
+import { Select } from "@/components/ui/Select";
 import { formatTime } from "@/lib/format";
 
 export interface DoctorListItem {
@@ -341,17 +342,13 @@ export function ScheduleEditor({ doctorId, schedules, onChange }: ScheduleEditor
       <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-3 border-t border-[#EEF2F1] pt-5">
         <div>
           <label className="mb-1.5 block text-xs font-semibold text-ink">Day</label>
-          <select
-            value={dayOfWeek}
-            onChange={(e) => setDayOfWeek(Number(e.target.value))}
-            className="h-11 rounded-full bg-white px-4 text-sm shadow-[inset_0_0_0_1px_#DCE5E2] focus:outline-none"
-          >
+          <Select value={dayOfWeek} onChange={(e) => setDayOfWeek(Number(e.target.value))} className="h-11 text-sm">
             {dayNames.map((name, i) => (
               <option key={name} value={i}>
                 {name}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div>
           <label className="mb-1.5 block text-xs font-semibold text-ink">Start</label>
