@@ -92,7 +92,7 @@ export function StaffSidebar({ role, fullName }: { role: StaffRole; fullName: st
       </div>
 
       <div className="relative mt-auto flex flex-col gap-3 rounded-[24px] border border-white/[0.08] bg-white/[0.07] p-3">
-        <div className="flex items-center gap-2.5">
+        <Link href="/staff/profile" className="flex items-center gap-2.5">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-sm font-bold">
             {displayName.charAt(0).toUpperCase()}
           </span>
@@ -100,7 +100,7 @@ export function StaffSidebar({ role, fullName }: { role: StaffRole; fullName: st
             <span className="truncate text-[13px] font-semibold">{displayName}</span>
             <span className="text-[11px] font-semibold text-[#F2A472]">{roleLabels[role]}</span>
           </div>
-        </div>
+        </Link>
         <button
           type="button"
           onClick={handleSignOut}

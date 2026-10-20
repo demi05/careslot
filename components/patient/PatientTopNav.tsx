@@ -49,12 +49,12 @@ export function PatientTopNav({ userName }: { userName: string }) {
               </span>
             )}
           </Link>
-          <div className="flex items-center gap-2">
+          <Link href="/profile" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-tint text-sm font-bold text-primary">
               {userName.charAt(0).toUpperCase()}
             </div>
             <span className="hidden text-sm font-semibold sm:inline">{userName}</span>
-          </div>
+          </Link>
           <button
             type="button"
             onClick={handleSignOut}
