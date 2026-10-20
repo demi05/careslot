@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireStaff, type StaffRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatDoctorName } from "@/lib/format";
 
 interface ActionResult {
   error?: string;
@@ -32,11 +33,12 @@ export async function createStaffMemberAction(
   }
 
   const admin = createAdminClient();
+  const normalizedName = role === "doctor" ? formatDoctorName(fullName) : fullName.trim();
 
   const { data: created, error: createError } = await admin.auth.admin.createUser({
     email: email.trim(),
     email_confirm: true,
-    user_metadata: { full_name: fullName.trim(), role },
+    user_metadata: { full_name: normalizedName, role },
   });
 
   if (createError || !created.user) {
@@ -104,7 +106,7 @@ export async function addRosterEntryAction(
   const supabase = await createClient();
   const { error } = await supabase.from("staff_roster").insert({
     email: trimmedEmail,
-    full_name: fullName.trim(),
+    full_name: role === "doctor" ? formatDoctorName(fullName) : fullName.trim(),
     role,
     specialty: role === "doctor" ? specialty!.trim() : null,
     added_by: user.id,
