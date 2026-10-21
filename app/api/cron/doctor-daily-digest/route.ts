@@ -6,18 +6,7 @@ import { doctorDailyDigestEmail } from "@/lib/emailTemplates";
 
 export const dynamic = "force-dynamic";
 
-/**
- * FR7: at the start of each clinic day, email every active doctor a
- * summary of their appointments for that day. Run on a schedule (see
- * vercel.json) rather than tied to any user action — nobody has to
- * remember to trigger it.
- *
- * Not logged through the patient-facing notifications table: that
- * table's appointment_id column models one notification per
- * appointment, and a digest email covers many appointments at once, so
- * it doesn't fit that shape. Success/failure counts are returned in the
- * response instead, for whichever cron-monitoring the deployment uses.
- */
+
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
   if (secret && request.headers.get("authorization") !== `Bearer ${secret}`) {
