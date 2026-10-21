@@ -21,10 +21,15 @@ interface SlotPickerProps {
   selected?: { date: string; time: string } | null;
 }
 
+interface Slot {
+  time: string;
+  available: boolean;
+}
+
 export function SlotPicker({ doctorId, onSelect, selected }: SlotPickerProps) {
   const [days] = useState(() => nextDays(14));
   const [selectedDate, setSelectedDate] = useState(() => toISODate(days[0]));
-  const [slots, setSlots] = useState<string[]>([]);
+  const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,7 +46,7 @@ export function SlotPicker({ doctorId, onSelect, selected }: SlotPickerProps) {
         setError("Couldn't load available times. Please try again.");
         setSlots([]);
       } else {
-        setSlots((data ?? []).map((row) => row.slot_time));
+        setSlots((data ?? []).map((row) => ({ time: row.slot_time, available: row.is_available })));
       }
       setLoading(false);
     },
@@ -84,28 +89,35 @@ export function SlotPicker({ doctorId, onSelect, selected }: SlotPickerProps) {
       <div className="rounded-[28px] bg-surface p-4 shadow-[0_12px_30px_-22px_rgba(20,35,31,0.45)]">
         <div className="mb-3 flex items-center justify-between px-1">
           <span className="text-sm font-bold text-ink">Choose a time</span>
-          {!loading && !error && <span className="text-xs text-muted">{slots.length} free</span>}
+          {!loading && !error && (
+            <span className="text-xs text-muted">{slots.filter((s) => s.available).length} free</span>
+          )}
         </div>
 
         {error && <p className="text-sm text-danger">{error}</p>}
         {!error && loading && <p className="text-sm text-muted">Loading available times…</p>}
         {!error && !loading && slots.length === 0 && (
-          <p className="text-sm text-muted">No available times on this day. Try another date.</p>
+          <p className="text-sm text-muted">No slots on this day. Try another date.</p>
         )}
         {!error && !loading && slots.length > 0 && (
           <div className="grid grid-cols-3 gap-2">
-            {slots.map((time) => {
-              const active = selected?.date === selectedDate && selected?.time === time;
+            {slots.map((slot) => {
+              const active = selected?.date === selectedDate && selected?.time === slot.time;
               return (
                 <button
-                  key={time}
+                  key={slot.time}
                   type="button"
-                  onClick={() => onSelect(selectedDate, time)}
+                  disabled={!slot.available}
+                  onClick={() => onSelect(selectedDate, slot.time)}
                   className={`flex h-[38px] items-center justify-center rounded-full text-[13px] font-semibold transition-colors ${
-                    active ? "bg-primary text-white" : "bg-background text-ink hover:bg-primary-tint"
+                    !slot.available
+                      ? "cursor-not-allowed bg-background text-muted/50 line-through"
+                      : active
+                        ? "bg-primary text-white"
+                        : "bg-background text-ink hover:bg-primary-tint"
                   }`}
                 >
-                  {formatTime(time)}
+                  {formatTime(slot.time)}
                 </button>
               );
             })}

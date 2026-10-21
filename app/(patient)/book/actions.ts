@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notifyAppointmentEvent } from "@/lib/notify";
 import { appointmentBookedEmail } from "@/lib/emailTemplates";
 import { appointmentBookedSms } from "@/lib/smsTemplates";
+import { isPastSlot } from "@/lib/time";
 
 interface ActionResult {
   error?: string;
@@ -26,6 +27,9 @@ export async function bookAppointmentAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "You need to be signed in to book an appointment." };
+  if (isPastSlot(appointmentDate, appointmentTime)) {
+    return { error: "That time has already passed. Please pick a time in the future." };
+  }
 
   const { data, error } = await supabase
     .from("appointments")

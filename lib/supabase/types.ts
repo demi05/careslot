@@ -96,7 +96,7 @@ export type Database = {
           doctor_id: string;
           appointment_date: string;
           appointment_time: string;
-          status: "pending" | "confirmed" | "cancelled" | "no-show";
+          status: "pending" | "confirmed" | "cancelled" | "no-show" | "completed";
           reason: string | null;
           created_at: string;
         };
@@ -110,7 +110,7 @@ export type Database = {
         Update: {
           appointment_date?: string;
           appointment_time?: string;
-          status?: "pending" | "confirmed" | "cancelled" | "no-show";
+          status?: "pending" | "confirmed" | "cancelled" | "no-show" | "completed";
           reason?: string | null;
         };
         Relationships: [];
@@ -227,7 +227,7 @@ export type Database = {
     Functions: {
       get_available_slots: {
         Args: { p_doctor_id: string; p_date: string };
-        Returns: { slot_time: string }[];
+        Returns: { slot_time: string; is_available: boolean }[];
       };
     };
   };
