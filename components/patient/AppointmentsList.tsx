@@ -5,6 +5,7 @@ import { CalendarX } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/client";
 import { useRealtimeRefresh } from "@/lib/supabase/useRealtimeRefresh";
 import { fetchPatientAppointments, type AppointmentWithDoctor } from "@/lib/appointments";
+import { isPastSlot } from "@/lib/time";
 import { AppointmentRow } from "@/components/patient/AppointmentRow";
 import { EmptyState } from "@/components/ui/EmptyState";
 
@@ -33,11 +34,11 @@ export function AppointmentsList({ initialAppointments, userId }: AppointmentsLi
 
   useRealtimeRefresh("appointments", `patient_id=eq.${userId}`, refetch);
 
-  const today = new Date().toISOString().slice(0, 10);
   const filtered = appointments.filter((a) => {
+    const past = isPastSlot(a.appointment_date, a.appointment_time);
     if (filter === "cancelled") return a.status === "cancelled";
-    if (filter === "upcoming") return a.status !== "cancelled" && a.appointment_date >= today;
-    if (filter === "past") return a.status === "no-show" || (a.status !== "cancelled" && a.appointment_date < today);
+    if (filter === "upcoming") return a.status !== "cancelled" && !past;
+    if (filter === "past") return a.status === "no-show" || a.status === "completed" || (a.status !== "cancelled" && past);
     return true;
   });
 
