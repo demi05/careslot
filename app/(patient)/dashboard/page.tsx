@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { CalendarPlus, ListChecks, Pill, CaretRight } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/server";
+import { isPastSlot } from "@/lib/time";
 import { PatientTopNav } from "@/components/patient/PatientTopNav";
 import { PatientBottomTabs } from "@/components/patient/PatientBottomTabs";
 import { AppointmentCard } from "@/components/patient/AppointmentCard";
@@ -42,7 +43,8 @@ export default async function DashboardPage() {
       .neq("status", "cancelled")
       .gte("appointment_date", today)
       .order("appointment_date", { ascending: true })
-      .limit(4),
+      .order("appointment_time", { ascending: true })
+      .limit(10),
     supabase
       .from("medications")
       .select("medication_name")
@@ -51,7 +53,8 @@ export default async function DashboardPage() {
       .limit(1),
   ]);
 
-  const appointments = (!error && data ? data : []) as unknown as UpcomingAppointment[];
+  const fetched = (!error && data ? data : []) as unknown as UpcomingAppointment[];
+  const appointments = fetched.filter((a) => !isPastSlot(a.appointment_date, a.appointment_time)).slice(0, 4);
   const readyMedication = medsData?.[0]?.medication_name ?? null;
   const [next, ...rest] = appointments;
 
