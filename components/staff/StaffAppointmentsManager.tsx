@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { MagnifyingGlass, Plus, Check, X, UserMinus } from "@phosphor-icons/react/dist/ssr";
+import { MagnifyingGlass, Plus, Check, X, UserMinus, CheckCircle } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/client";
 import { useRealtimeRefresh } from "@/lib/supabase/useRealtimeRefresh";
 import {
@@ -20,7 +20,7 @@ export interface StaffAppointmentFull {
   id: string;
   appointment_date: string;
   appointment_time: string;
-  status: "pending" | "confirmed" | "cancelled" | "no-show";
+  status: "pending" | "confirmed" | "cancelled" | "no-show" | "completed";
   doctor_id: string;
   patient: { full_name: string | null } | null;
   doctors: { specialty: string; profiles: { full_name: string | null } | null } | null;
@@ -41,12 +41,14 @@ const statusStyles: Record<string, string> = {
   pending: "bg-[#FDF1E1] text-[#B45309]",
   cancelled: "bg-gray-100 text-gray-500",
   "no-show": "bg-[#FDE8E8] text-[#B91C1C]",
+  completed: "bg-[#E3F5EA] text-[#137A3A]",
 };
 
 const statusFilters: { key: string; label: string }[] = [
   { key: "all", label: "All" },
   { key: "pending", label: "Pending" },
   { key: "confirmed", label: "Confirmed" },
+  { key: "completed", label: "Completed" },
   { key: "no-show", label: "No-show" },
   { key: "cancelled", label: "Cancelled" },
 ];
@@ -124,7 +126,7 @@ export function StaffAppointmentsManager({
     });
   }
 
-  async function updateStatus(id: string, status: "confirmed" | "cancelled" | "no-show") {
+  async function updateStatus(id: string, status: "confirmed" | "cancelled" | "no-show" | "completed") {
     setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
     await staffUpdateAppointmentStatusAction(id, status);
   }
@@ -284,7 +286,7 @@ export function StaffAppointmentsManager({
                   </span>
                   {!readOnly && (
                     <div className="flex justify-end gap-1.5">
-                      {a.status !== "confirmed" && a.status !== "cancelled" && (
+                      {a.status !== "confirmed" && a.status !== "cancelled" && a.status !== "completed" && (
                         <button
                           type="button"
                           onClick={() => updateStatus(a.id, "confirmed")}
@@ -293,7 +295,17 @@ export function StaffAppointmentsManager({
                           Confirm
                         </button>
                       )}
-                      {a.status !== "cancelled" && (
+                      {a.status === "confirmed" && (
+                        <button
+                          type="button"
+                          onClick={() => updateStatus(a.id, "completed")}
+                          className="flex h-8 items-center gap-1 rounded-full bg-primary-tint px-3 text-xs font-bold text-primary"
+                        >
+                          <CheckCircle size={14} />
+                          Mark attended
+                        </button>
+                      )}
+                      {a.status !== "cancelled" && a.status !== "completed" && (
                         <button
                           type="button"
                           onClick={() => setReschedulingId(reschedulingId === a.id ? null : a.id)}
@@ -302,7 +314,7 @@ export function StaffAppointmentsManager({
                           Reschedule
                         </button>
                       )}
-                      {a.status !== "cancelled" && (
+                      {a.status !== "cancelled" && a.status !== "completed" && (
                         <button
                           type="button"
                           onClick={() => updateStatus(a.id, "cancelled")}

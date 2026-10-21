@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 interface AppointmentAnalyticsRow {
   appointment_date: string;
-  status: "pending" | "confirmed" | "cancelled" | "no-show";
+  status: "pending" | "confirmed" | "cancelled" | "no-show" | "completed";
   doctor_id: string;
   patient: { full_name: string | null } | null;
   doctors: { profiles: { full_name: string | null } | null } | null;

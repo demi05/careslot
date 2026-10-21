@@ -5,6 +5,7 @@ import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyAppointmentEvent } from "@/lib/notify";
+import { isPastSlot } from "@/lib/time";
 import {
   appointmentBookedEmail,
   appointmentConfirmedEmail,
@@ -67,7 +68,7 @@ async function notifyPatientOfAppointment(
 
 export async function staffUpdateAppointmentStatusAction(
   appointmentId: string,
-  status: "confirmed" | "pending" | "cancelled" | "no-show"
+  status: "confirmed" | "pending" | "cancelled" | "no-show" | "completed"
 ): Promise<ActionResult> {
   await requireStaff(["front-desk", "admin"]);
   const supabase = await createClient();
@@ -111,6 +112,9 @@ export async function staffRescheduleAppointmentAction(
   appointmentTime: string
 ): Promise<ActionResult> {
   await requireStaff(["front-desk", "admin"]);
+  if (isPastSlot(appointmentDate, appointmentTime)) {
+    return { error: "That time has already passed. Please pick a time in the future." };
+  }
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -154,6 +158,9 @@ export async function staffCreateAppointmentAction(
   if (!patientId) return { error: "Choose a patient." };
   if (!doctorId) return { error: "Choose a doctor." };
   if (!appointmentDate || !appointmentTime) return { error: "Choose a date and time." };
+  if (isPastSlot(appointmentDate, appointmentTime)) {
+    return { error: "That time has already passed. Please pick a time in the future." };
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase
