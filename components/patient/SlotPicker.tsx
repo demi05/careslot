@@ -73,7 +73,7 @@ export function SlotPicker({ doctorId, onSelect, selected }: SlotPickerProps) {
               }`}
               style={{ width: 48 }}
             >
-              <span className="text-xs font-medium">{formatDayLabel(d).slice(0, 3)}</span>
+              <span className="text-xs font-medium">{formatDayLabel(d)}</span>
               <span
                 className={`flex h-9 w-9 items-center justify-center rounded-full text-[15px] font-bold ${
                   active ? "bg-white text-primary" : "text-ink"
