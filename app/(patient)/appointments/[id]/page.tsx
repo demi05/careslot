@@ -1,14 +1,25 @@
 import { redirect, notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/server";
 import { PatientTopNav } from "@/components/patient/PatientTopNav";
 import { PatientBottomTabs } from "@/components/patient/PatientBottomTabs";
 import { AppointmentDetailCard } from "@/components/patient/AppointmentDetailCard";
 import type { AppointmentWithDoctor } from "@/lib/appointments";
 
-export default async function AppointmentDetailPage({ params }: { params: { id: string } }) {
-  const supabase = createClient();
+export default async function AppointmentDetailPage({
+  params,
+  searchParams,
+}: {
+  // Next 14 (pinned in package.json) passes these as plain objects; Next
+  // 15+ made them Promises. Awaiting works correctly either way — await
+  // on a non-Promise value just resolves immediately — so this is safe
+  // regardless of which actually ends up installed.
+  params: Promise<{ id: string }> | { id: string };
+  searchParams: Promise<{ action?: string }> | { action?: string };
+}) {
+  const { id } = await params;
+  const resolvedSearchParams = await searchParams;
+
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -19,8 +30,10 @@ export default async function AppointmentDetailPage({ params }: { params: { id: 
 
   const { data, error } = await supabase
     .from("appointments")
-    .select("id, doctor_id, appointment_date, appointment_time, status, reason, doctors(specialty, profiles(full_name))")
-    .eq("id", params.id)
+    .select(
+      "id, doctor_id, appointment_date, appointment_time, status, reason, doctors(specialty, photo_url, profiles(full_name))"
+    )
+    .eq("id", id)
     .single();
 
   if (error || !data) {
@@ -33,18 +46,15 @@ export default async function AppointmentDetailPage({ params }: { params: { id: 
   )?.trim();
 
   return (
-    <div className="flex min-h-screen flex-col animate-fade-in-up">
+    <div className="flex min-h-screen flex-col animate-fade-in-up pb-28 sm:pb-0">
       <PatientTopNav userName={fullName || user.email || "there"} />
 
-      <div className="mx-auto w-full max-w-2xl flex-1 px-5 py-7 sm:px-8">
-        <Link
-          href="/appointments"
-          className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-ink"
-        >
-          <ArrowLeft size={15} />
-          Back to my appointments
-        </Link>
-        <AppointmentDetailCard appointment={data as unknown as AppointmentWithDoctor} doctorId={data.doctor_id} />
+      <div className="mx-auto w-full max-w-2xl flex-1 px-5 py-6 sm:px-8">
+        <AppointmentDetailCard
+          appointment={data as unknown as AppointmentWithDoctor}
+          doctorId={data.doctor_id}
+          autoOpenReschedule={resolvedSearchParams.action === "reschedule"}
+        />
       </div>
 
       <PatientBottomTabs />

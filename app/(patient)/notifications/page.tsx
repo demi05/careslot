@@ -5,7 +5,7 @@ import { PatientBottomTabs } from "@/components/patient/PatientBottomTabs";
 import { NotificationsList, type NotificationRow } from "@/components/patient/NotificationsList";
 
 export default async function NotificationsPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -16,15 +16,19 @@ export default async function NotificationsPage() {
 
   const { data } = await supabase
     .from("notifications")
-    .select("id, channel, delivery_status, sent_at, created_at")
+    .select("id, channel, subject, body, delivery_status, sent_at, created_at")
     .order("created_at", { ascending: false })
     .limit(50);
 
-  return (
-    <div className="flex min-h-screen flex-col animate-fade-in-up">
-      <PatientSimpleHeader title="Notifications" />
+  // Mark everything the patient can see as read now that they've opened
+  // this page -- clears the unread badge in the top/bottom nav.
+  await supabase.from("notifications").update({ read_at: new Date().toISOString() }).is("read_at", null);
 
-      <div className="mx-auto w-full max-w-2xl flex-1 px-5 py-5">
+  return (
+    <div className="flex min-h-screen flex-col animate-fade-in-up pb-28 sm:pb-0">
+      <PatientSimpleHeader title="Reminders" />
+
+      <div className="mx-auto w-full max-w-2xl flex-1 px-5 py-5 sm:px-8">
         <NotificationsList initialNotifications={(data ?? []) as NotificationRow[]} />
       </div>
 

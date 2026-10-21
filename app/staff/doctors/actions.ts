@@ -15,13 +15,17 @@ export async function addScheduleWindowAction(
   endTime: string,
   slotDurationMinutes: number
 ): Promise<ActionResult> {
-  await requireStaff(["front-desk", "admin"]);
+  const { user, role } = await requireStaff(["doctor", "front-desk", "admin"]);
+
+  if (role === "doctor" && doctorId !== user.id) {
+    return { error: "You can only manage your own schedule." };
+  }
 
   if (startTime >= endTime) {
     return { error: "End time must be after start time." };
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.from("doctor_schedules").insert({
     doctor_id: doctorId,
     day_of_week: dayOfWeek,
@@ -35,13 +39,22 @@ export async function addScheduleWindowAction(
   }
 
   revalidatePath("/staff/doctors");
+  revalidatePath("/staff/schedule");
   return {};
 }
 
 export async function removeScheduleWindowAction(scheduleId: string): Promise<ActionResult> {
-  await requireStaff(["front-desk", "admin"]);
+  const { user, role } = await requireStaff(["doctor", "front-desk", "admin"]);
 
-  const supabase = createClient();
+  const supabase = await createClient();
+
+  if (role === "doctor") {
+    const { data: schedule } = await supabase.from("doctor_schedules").select("doctor_id").eq("id", scheduleId).single();
+    if (!schedule || schedule.doctor_id !== user.id) {
+      return { error: "You can only manage your own schedule." };
+    }
+  }
+
   const { error } = await supabase.from("doctor_schedules").delete().eq("id", scheduleId);
 
   if (error) {
@@ -49,5 +62,6 @@ export async function removeScheduleWindowAction(scheduleId: string): Promise<Ac
   }
 
   revalidatePath("/staff/doctors");
+  revalidatePath("/staff/schedule");
   return {};
 }

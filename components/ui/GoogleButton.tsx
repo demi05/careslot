@@ -62,7 +62,7 @@ export function GoogleButton({ onCredential, text = "continue_with" }: GoogleBut
         theme: "outline",
         size: "large",
         text,
-        shape: "rectangular",
+        shape: "pill",
         logo_alignment: "left",
         width: containerRef.current.offsetWidth,
       });

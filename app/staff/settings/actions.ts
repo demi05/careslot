@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireStaff, type StaffRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatDoctorName } from "@/lib/format";
 
 interface ActionResult {
   error?: string;
@@ -32,11 +33,12 @@ export async function createStaffMemberAction(
   }
 
   const admin = createAdminClient();
+  const normalizedName = role === "doctor" ? formatDoctorName(fullName) : fullName.trim();
 
   const { data: created, error: createError } = await admin.auth.admin.createUser({
     email: email.trim(),
     email_confirm: true,
-    user_metadata: { full_name: fullName.trim(), role },
+    user_metadata: { full_name: normalizedName, role },
   });
 
   if (createError || !created.user) {
@@ -60,7 +62,7 @@ export async function createStaffMemberAction(
 export async function updateStaffRoleAction(userId: string, role: "front-desk" | "admin"): Promise<ActionResult> {
   await requireStaff(["admin"]);
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.from("profiles").update({ role }).eq("id", userId);
   if (error) return { error: error.message };
 
@@ -71,7 +73,7 @@ export async function updateStaffRoleAction(userId: string, role: "front-desk" |
 export async function toggleDoctorActiveAction(doctorId: string, isActive: boolean): Promise<ActionResult> {
   await requireStaff(["front-desk", "admin"]);
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.from("doctors").update({ is_active: isActive }).eq("id", doctorId);
   if (error) return { error: error.message };
 
@@ -101,10 +103,10 @@ export async function addRosterEntryAction(
     return { error: "Specialty is required for a doctor." };
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.from("staff_roster").insert({
     email: trimmedEmail,
-    full_name: fullName.trim(),
+    full_name: role === "doctor" ? formatDoctorName(fullName) : fullName.trim(),
     role,
     specialty: role === "doctor" ? specialty!.trim() : null,
     added_by: user.id,
@@ -124,7 +126,7 @@ export async function addRosterEntryAction(
 export async function removeRosterEntryAction(rosterId: string): Promise<ActionResult> {
   await requireStaff(["admin"]);
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.from("staff_roster").delete().eq("id", rosterId);
   if (error) return { error: error.message };
 

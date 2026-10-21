@@ -5,9 +5,11 @@ import Link from "next/link";
 import { SquaresFour, CalendarCheck, Pill, Bell } from "@phosphor-icons/react/dist/ssr";
 import { LogoMark } from "@/components/ui/Logo";
 import { createClient } from "@/lib/supabase/client";
+import { useUnreadNotificationCount } from "@/lib/supabase/useUnreadNotificationCount";
 
 export function PatientTopNav({ userName }: { userName: string }) {
   const router = useRouter();
+  const unreadCount = useUnreadNotificationCount();
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -39,15 +41,20 @@ export function PatientTopNav({ userName }: { userName: string }) {
         </nav>
 
         <div className="flex items-center gap-4">
-          <Link href="/notifications" aria-label="Notifications" className="text-ink">
+          <Link href="/notifications" aria-label="Notifications" className="relative text-ink">
             <Bell size={20} />
+            {unreadCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
           </Link>
-          <div className="flex items-center gap-2">
+          <Link href="/profile" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-tint text-sm font-bold text-primary">
               {userName.charAt(0).toUpperCase()}
             </div>
             <span className="hidden text-sm font-semibold sm:inline">{userName}</span>
-          </div>
+          </Link>
           <button
             type="button"
             onClick={handleSignOut}

@@ -1,14 +1,10 @@
 "use client";
 
 import { useState, useCallback, useTransition, type FormEvent } from "react";
-import { Pill, Plus, X } from "@phosphor-icons/react/dist/ssr";
+import { Pill, MagnifyingGlass, CheckCircle, ChatText } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/client";
 import { useRealtimeRefresh } from "@/lib/supabase/useRealtimeRefresh";
 import { logMedicationAction, markMedicationCollectedAction } from "@/app/staff/pharmacy/actions";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { Button } from "@/components/ui/Button";
-import { TextField } from "@/components/ui/TextField";
 import { Alert } from "@/components/ui/Alert";
 import { formatDate } from "@/lib/format";
 
@@ -39,6 +35,11 @@ async function fetchQueue(): Promise<PharmacyMedicationRow[]> {
   return (data ?? []) as unknown as PharmacyMedicationRow[];
 }
 
+const statusStyles: Record<string, string> = {
+  pending: "bg-[#FDF1E1] text-[#B45309]",
+  collected: "bg-[#E3F5EA] text-[#137A3A]",
+};
+
 interface PharmacyDeskManagerProps {
   initialMedications: PharmacyMedicationRow[];
   patients: PatientOption[];
@@ -46,7 +47,6 @@ interface PharmacyDeskManagerProps {
 
 export function PharmacyDeskManager({ initialMedications, patients }: PharmacyDeskManagerProps) {
   const [medications, setMedications] = useState(initialMedications);
-  const [showLogForm, setShowLogForm] = useState(false);
 
   const refetch = useCallback(async () => {
     setMedications(await fetchQueue());
@@ -55,6 +55,9 @@ export function PharmacyDeskManager({ initialMedications, patients }: PharmacyDe
   useRealtimeRefresh("medications", undefined, refetch);
 
   const pendingCount = medications.filter((m) => m.status === "pending").length;
+  const collectedToday = medications.filter(
+    (m) => m.status === "collected" && m.logged_at.slice(0, 10) === new Date().toISOString().slice(0, 10)
+  ).length;
 
   async function markCollected(id: string) {
     setMedications((prev) => prev.map((m) => (m.id === id ? { ...m, status: "collected" } : m)));
@@ -62,80 +65,67 @@ export function PharmacyDeskManager({ initialMedications, patients }: PharmacyDe
   }
 
   return (
-    <div>
-      <div className="mb-6 grid max-w-md grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-border bg-surface p-5">
-          <div className="mb-2 text-[13px] font-semibold text-muted">To dispense</div>
-          <div className="text-2xl font-extrabold text-warning">{pendingCount}</div>
-        </div>
-        <div className="rounded-2xl border border-border bg-surface p-5">
-          <div className="mb-2 text-[13px] font-semibold text-muted">Collected</div>
-          <div className="text-2xl font-extrabold text-success">{medications.length - pendingCount}</div>
-        </div>
-      </div>
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[380px_1fr]">
+      <LogMedicationForm patients={patients} onLogged={refetch} />
 
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-[17px] font-bold text-ink">Dispensing queue</h2>
-        <button
-          type="button"
-          onClick={() => setShowLogForm((v) => !v)}
-          className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-primary-dark"
-        >
-          {showLogForm ? <X size={15} /> : <Plus size={15} weight="bold" />}
-          {showLogForm ? "Close" : "Log medication"}
-        </button>
-      </div>
-
-      {showLogForm && (
-        <div className="mb-5">
-          <LogMedicationForm
-            patients={patients}
-            onLogged={() => {
-              refetch();
-              setShowLogForm(false);
-            }}
-          />
+      <div className="flex min-h-0 flex-col gap-1 rounded-[30px] bg-surface p-5 shadow-[0_12px_30px_-24px_rgba(20,35,31,0.5)]">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[17px] font-bold text-ink">Pickups</span>
+          <div className="flex gap-2">
+            <span className="flex h-[34px] items-center rounded-full bg-[#FDF1E1] px-3.5 text-xs font-bold text-[#B45309]">
+              {pendingCount} pending
+            </span>
+            <span className="flex h-[34px] items-center rounded-full bg-[#E3F5EA] px-3.5 text-xs font-bold text-[#137A3A]">
+              {collectedToday} collected today
+            </span>
+          </div>
         </div>
-      )}
 
-      {medications.length === 0 ? (
-        <EmptyState
-          icon={<Pill size={22} weight="bold" />}
-          title="No medications logged yet"
-          description="Medications you log for patients will show up here."
-        />
-      ) : (
-        <div className="flex flex-col gap-3">
-          {medications.map((m) => (
-            <div key={m.id} className="rounded-2xl border border-border bg-surface p-5">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <div className="text-[15px] font-bold text-ink">{m.patient?.full_name ?? "Patient"}</div>
-                  <div className="text-sm text-ink">
-                    {m.medication_name}
-                    {m.dosage ? ` · ${m.dosage}` : ""}
-                  </div>
-                  <div className="mt-1 text-[13px] text-muted">
-                    Logged {formatDate(m.logged_at.slice(0, 10))} by {m.logger?.full_name ?? "Staff"}
-                  </div>
+        {medications.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted">Medications you log for patients will show up here.</p>
+        ) : (
+          medications.map((m, i) => {
+            const initials = (m.patient?.full_name ?? "P").charAt(0).toUpperCase();
+            return (
+              <div
+                key={m.id}
+                className={`grid grid-cols-[1.3fr_1.2fr_0.9fr_0.9fr_150px] items-center gap-3 py-2.5 ${
+                  i > 0 ? "border-t border-[#EEF2F1]" : ""
+                }`}
+              >
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-tint text-xs font-bold text-primary">
+                    {initials}
+                  </span>
+                  <span className="truncate text-sm font-bold text-ink">{m.patient?.full_name ?? "Patient"}</span>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  <StatusBadge status={m.status} />
-                  {m.status === "pending" && (
+                <span className="truncate text-[13px] text-ink">
+                  <strong className="font-semibold">{m.medication_name}</strong>
+                  {m.dosage ? ` ${m.dosage}` : ""}
+                </span>
+                <span className="text-xs text-muted">{formatDate(m.logged_at.slice(0, 10))}</span>
+                <span className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-bold ${statusStyles[m.status]}`}>
+                  {m.status}
+                </span>
+                <div className="justify-self-end">
+                  {m.status === "pending" ? (
                     <button
                       type="button"
                       onClick={() => markCollected(m.id)}
-                      className="rounded-lg bg-primary px-3.5 py-1.5 text-[12px] font-bold text-white transition-colors hover:bg-primary-dark"
+                      className="flex h-[34px] items-center gap-1.5 rounded-full bg-primary px-3.5 text-xs font-bold text-white"
                     >
-                      Mark dispensed
+                      <CheckCircle size={14} />
+                      Mark collected
                     </button>
+                  ) : (
+                    <span className="text-xs text-muted">Done</span>
                   )}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
@@ -146,15 +136,21 @@ interface LogMedicationFormProps {
 }
 
 function LogMedicationForm({ patients, onLogged }: LogMedicationFormProps) {
+  const [search, setSearch] = useState("");
   const [patientId, setPatientId] = useState(patients[0]?.id ?? "");
   const [medicationName, setMedicationName] = useState("");
   const [dosage, setDosage] = useState("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const visiblePatients = patients.filter((p) => !search || p.full_name?.toLowerCase().includes(search.toLowerCase()));
+  const selectedPatient = patients.find((p) => p.id === patientId);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
     if (!patientId || !medicationName.trim()) {
       setError("Choose a patient and enter a medication name.");
       return;
@@ -167,52 +163,99 @@ function LogMedicationForm({ patients, onLogged }: LogMedicationFormProps) {
       }
       setMedicationName("");
       setDosage("");
+      setSuccess(`${selectedPatient?.full_name ?? "Patient"} will be emailed and texted.`);
       onLogged();
     });
   }
 
-  if (patients.length === 0) {
-    return (
-      <div className="rounded-2xl border border-border bg-surface p-5 text-sm text-muted">
-        No patients registered yet — nothing to log medications for.
-      </div>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-5">
-      {error && <Alert variant="error">{error}</Alert>}
-      <div>
-        <label className="mb-1.5 block text-sm font-semibold text-ink">Patient</label>
-        <select
-          value={patientId}
-          onChange={(e) => setPatientId(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-3.5 py-3 text-base"
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <span className="text-[28px] font-bold tracking-[-0.03em] text-ink">Pharmacy desk</span>
+
+      <div className="flex flex-col gap-3.5 rounded-[32px] bg-gradient-to-br from-accent to-accent-dark p-5 text-white">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+            <Pill size={19} />
+          </span>
+          <span className="text-lg font-bold tracking-[-0.02em]">Log a pickup</span>
+        </div>
+
+        {error && <Alert variant="error">{error}</Alert>}
+        {success && <Alert variant="success">{success}</Alert>}
+
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold">Patient</label>
+          <div className="flex h-12 items-center gap-2.5 rounded-full bg-white px-4 text-ink">
+            <MagnifyingGlass size={16} className="text-muted" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={selectedPatient?.full_name ?? "Search patients"}
+              className="w-full bg-transparent text-sm focus:outline-none"
+            />
+          </div>
+          {search && (
+            <div className="mt-1.5 flex max-h-40 flex-col gap-0.5 overflow-y-auto rounded-[22px] bg-white p-1.5 text-ink">
+              {visiblePatients.length === 0 ? (
+                <div className="px-3 py-2 text-sm text-muted">No matches.</div>
+              ) : (
+                visiblePatients.slice(0, 6).map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      setPatientId(p.id);
+                      setSearch("");
+                    }}
+                    className={`flex items-center gap-2.5 rounded-2xl p-2 text-left ${
+                      p.id === patientId ? "bg-primary-tint" : "hover:bg-background"
+                    }`}
+                  >
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#EEF2F1] text-xs font-bold">
+                      {(p.full_name ?? "?").charAt(0).toUpperCase()}
+                    </span>
+                    <span className="text-[13px] font-semibold">{p.full_name ?? "Patient"}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-[1.4fr_1fr] gap-2.5">
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold">Medication</label>
+            <input
+              value={medicationName}
+              onChange={(e) => setMedicationName(e.target.value)}
+              placeholder="Amoxicillin"
+              className="h-12 w-full rounded-full bg-white px-4 text-sm text-ink focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold">Dosage</label>
+            <input
+              value={dosage}
+              onChange={(e) => setDosage(e.target.value)}
+              placeholder="500mg"
+              className="h-12 w-full rounded-full bg-white px-4 text-sm text-ink focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={pending || patients.length === 0}
+          className="flex h-[50px] items-center justify-center gap-2 rounded-full bg-primary-dark text-sm font-bold text-white disabled:opacity-60"
         >
-          {patients.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.full_name ?? p.id}
-            </option>
-          ))}
-        </select>
+          <Pill size={16} />
+          {pending ? "Logging…" : "Log for pickup"}
+        </button>
+        <span className="flex items-center gap-1.5 text-[11px] text-white/85">
+          <ChatText size={14} />
+          Patient gets an email and SMS when logged.
+        </span>
       </div>
-      <TextField
-        label="Medication name"
-        name="medicationName"
-        value={medicationName}
-        onChange={(e) => setMedicationName(e.target.value)}
-        placeholder="Amoxicillin 500mg"
-      />
-      <TextField
-        label="Dosage (optional)"
-        name="dosage"
-        value={dosage}
-        onChange={(e) => setDosage(e.target.value)}
-        placeholder="Take twice daily"
-      />
-      <Button type="submit" loading={pending} className="!w-fit !px-5 !py-2.5 !text-sm">
-        Log medication
-      </Button>
     </form>
   );
 }
