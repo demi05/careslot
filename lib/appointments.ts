@@ -5,7 +5,7 @@ export interface AppointmentWithDoctor {
   id: string;
   appointment_date: string;
   appointment_time: string;
-  status: "pending" | "confirmed" | "cancelled" | "no-show";
+  status: "pending" | "confirmed" | "cancelled" | "no-show" | "completed";
   reason: string | null;
   doctors: { specialty: string; photo_url: string | null; profiles: { full_name: string | null } | null } | null;
 }

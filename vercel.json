@@ -2,11 +2,15 @@
   "crons": [
     {
       "path": "/api/cron/retry-notifications",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 12 * * *"
     },
     {
       "path": "/api/cron/doctor-daily-digest",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/auto-no-show",
+      "schedule": "0 1 * * *"
     }
   ]
 }

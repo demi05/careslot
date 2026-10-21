@@ -5,7 +5,7 @@ export function formatDate(isoDate: string): string {
 }
 
 export function formatDayLabel(date: Date): string {
-  return date.toLocaleDateString(undefined, { weekday: "short", day: "numeric" });
+  return date.toLocaleDateString(undefined, { weekday: "short" });
 }
 
 export function formatTime(time: string): string {

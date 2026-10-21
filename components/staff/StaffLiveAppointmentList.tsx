@@ -10,7 +10,7 @@ import { formatTime } from "@/lib/format";
 export interface StaffAppointmentRow {
   id: string;
   appointment_time: string;
-  status: "pending" | "confirmed" | "cancelled" | "no-show";
+  status: "pending" | "confirmed" | "cancelled" | "no-show" | "completed";
   patient: { full_name: string | null } | null;
   doctors: { specialty: string; profiles: { full_name: string | null } | null } | null;
 }
@@ -28,15 +28,17 @@ async function fetchToday(today: string): Promise<StaffAppointmentRow[]> {
   return (data ?? []) as unknown as StaffAppointmentRow[];
 }
 
-const statusOptions: { value: "confirmed" | "pending" | "no-show"; label: string }[] = [
+const statusOptions: { value: "confirmed" | "pending" | "no-show" | "completed"; label: string }[] = [
   { value: "confirmed", label: "Confirmed" },
   { value: "pending", label: "Pending" },
+  { value: "completed", label: "Completed" },
   { value: "no-show", label: "No-show" },
 ];
 
 const statusDot: Record<string, string> = {
   confirmed: "#16A34A",
   pending: "#B45309",
+  completed: "#16A34A",
   "no-show": "#DC2626",
   cancelled: "#9CA3AF",
 };
@@ -44,6 +46,7 @@ const statusDot: Record<string, string> = {
 const statusStyles: Record<string, string> = {
   confirmed: "bg-[#E3F5EA] text-[#137A3A]",
   pending: "bg-[#FDF1E1] text-[#B45309]",
+  completed: "bg-[#E3F5EA] text-[#137A3A]",
   "no-show": "bg-[#FDE8E8] text-[#B91C1C]",
   cancelled: "bg-gray-100 text-gray-500",
 };
@@ -65,7 +68,7 @@ export function StaffLiveAppointmentList({ initialAppointments, today, canEdit }
 
   async function handleStatusChange(id: string, status: string) {
     setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status: status as StaffAppointmentRow["status"] } : a)));
-    await staffUpdateAppointmentStatusAction(id, status as "confirmed" | "pending" | "no-show");
+    await staffUpdateAppointmentStatusAction(id, status as "confirmed" | "pending" | "no-show" | "completed");
   }
 
   if (appointments.length === 0) {
